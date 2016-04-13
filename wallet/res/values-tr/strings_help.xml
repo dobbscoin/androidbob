@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<resources>
+  <string name="help_wallet">
+<![CDATA[
+		<p>
+			Ekranın üst kısmı dobbscoin ve seçilen milli para birimi olarak bakiyenizi gösterir.
+			Para birimleri listesine gitmek için dokununuz, ve varsayılan olarak seçmek için dövizlerden birine dokununuz
+		</p>
+		<p>
+			Sağdaki QR kodu dobbscoin adresinizi içerir ve başka birisinin taraması için kullanılabilir.
+			Daha büyük bir sürümünü elde etmek için QR koduna dokununuz.
+		</p>
+		<p>
+			Ekranın alt kısmı muamele listenizi gösterir ve başlangıçta boştur.
+			Beklemedeki muameleler teyit edilene dek gri olarak gösterilir.
+			Gönderici ve alıcıları adres defterine eklemek için herhangi bir unsura dokununuz.
+		</p>
+		<p>
+			Eylem çubuğundaki düğmelere dokunarak dobbscoin talep edebilir ya da gönderebilirsiniz.
+			Seçenekler menüsünde daha fazla seçenek mevcuttur.
+		</p>
+	]]>
+	</string>
+  <string name="help_request_coins">
+<![CDATA[
+		<p>
+			Bu diyaloğu kullanarak başka bir kişiden dobbscoin talep edebilirsiniz (bu kişinin dobbscoin Wallet uygulamasını cihazında kurmuş olması gerekir).
+		</p>
+		<p>
+			İlk olarak talep edilen dobbscoin miktarını girebilirsiniz.
+		</p>
+		<p>
+			Ardından ya diğer kişi tarafından taranacak bir QR code oluşturmanız,
+			ya da uzaktaki bir kişiye etkinlik çubuğunda paylaş düğmesiyle talebinizi göndermeniz gerekir.
+			Bu kişinin dobbscoin bağlantısını tıklaması gerekecektir.
+		</p>
+		<p>
+			Her durumda diğer kişiye dobbscoin göndermesi için tüm seçenekleri doldurulmuş bir diyalog gösterilecektir.
+			Kabul ederse tüm yapması gereken muameleyi yollamaktır.
+		</p>
+	]]>
+	</string>
+  <string name="help_send_coins">
+<![CDATA[
+		<p>
+			dobbscoin gönderme prosedürünü başlattınız.
+			Buraya ya ana ekrandan ya da mobil ağ tarayıcınızda bir dobbscoin bağlantısına tıklayarak geldiniz.
+		</p>
+		<p>
+			İlk olarak ödeme yapacağınız dobbscoin adresini girmelisiniz.
+			Adres defterinizde bilinen adreslere dayanılarak adres otomatik olarak tamamlanacaktır.
+			Ayrıca etkinlik çubuğunda QR düğmesine dokunarak dobbscoin adresi ya da talebi içeren QR kodlarını tarayabilirsiniz.
+		</p>
+		<p>
+			Bunun ardından o anda ne kadar dobbscoin harcayabileceğinizi görüntüleyebilirsiniz.
+			Varsa ana ekrandaki bakiye ile farklılıklar henüz teyit edilmemiştir ve dolayısıyla henüz harcanamaz.
+		</p>
+		<p>
+			Son olarak ödenecek miktarı ve sunduğunuz ücreti girmeniz gerekir.
+		</p>
+		<p>
+			Çevrimdışı olduğunuz sırada bir muamele girebilirsiniz.
+			dobbscoin Wallet uygulamasının sonraki açılışında gönderilir.
+			Bir muamelenin mümkün olduğu kadar çabuk işlenmesini istiyorsanız bağlantınızın iyi olduğundan (mesela WLAN ile).
+		</p>
+		<p>
+			Not:
+			Muameleler geri alınamaz!
+			Alıcı adresini daima kontrol ediniz.
+		</p>
+	]]>
+	</string>
+  <string name="help_safety">
+<![CDATA[
+		<p>
+			<b>Bitcoinlerinizin güvenliği hakkında önemli noktalar:</b>
+		</p>
+		<p>
+			dobbscoin cüzdanınızdaki Bitcoinler cihazınızda saklanır.
+			<b>Cihazınızı kaybederseniz Bitcoinlerinizi de kaybedersiniz.</b>
+			Tıpkı fiziki cüzdanınızdaki para gibi.
+		</p>
+		<p>
+			<b>dobbscoin Wallet</b> uygulamasını kaldırmadan önce (ya da uygulama verilerini/cihazınızı sıfırlamadan önce) <b>tüm Bitcoinlerinizi başka bir cüzdana aktarınız</b>.
+			Kalan tüm Bitcoinler kaybolacaktır.
+		</p>
+		<p>
+			<b>Muameleler geri alınamaz</b>.
+			Bitcoinlerinizi yanlış bir adrese yollarsanız, bunları geri almak için alıcıyı tanımanız ve onun geri yollamayı kabul etmeniz dışında hiçbir yol yoktur.
+		</p>
+		<p>
+			<b>Android cihazınızı güvenli kullanın!</b>
+			Sadece tamamen güvendiğiniz uygulamaları indiriniz.
+			Kötücül uygulamalar cüzdanınızı çalmaya çalışabilir.
+		</p>
+		<p>
+			Riski sınırlayın!
+			<b>dobbscoin Wallet uygulamasını sadece küçük tutarlar için kullanınız</b>.
+		</p>
+	]]>
+	</string>
+</resources>

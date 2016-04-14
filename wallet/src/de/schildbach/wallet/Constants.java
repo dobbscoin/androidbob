@@ -109,7 +109,7 @@ public final class Constants
 	public static final String DONATION_ADDRESS = "1StangwQ9SiQrkSReB6QxMGwdtk3LuBZf";
 
 	/** Recipient e-mail address for reports. */
-	public static final String REPORT_EMAIL = "joshaf.est@gmail.com";
+	public static final String REPORT_EMAIL = "dobbscoin@gmail.com";
 
 	/** Subject line for manually reported issues. */
 	public static final String REPORT_SUBJECT_ISSUE = "Reported issue";

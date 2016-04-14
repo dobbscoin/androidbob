@@ -17,11 +17,11 @@
 	</Preference>
 	<Preference
 		android:key="about_source"
-		android:summary="https://github.com/dobbscoin-wallet/dobbscoin-wallet"
+		android:summary="https://github.com/dobbscoin/androidbob"
 		android:title="@string/about_source_title" >
 		<intent
 			android:action="android.intent.action.VIEW"
-			android:data="https://github.com/dobbscoin-wallet/dobbscoin-wallet" />
+			android:data="https://github.com/dobbscoin/androidbob" />
 	</Preference>
 	<Preference
 		android:key="about_market_app"
@@ -44,12 +44,27 @@
 			android:data="https://twitter.com/dobbscoin" />
 	</Preference>
 	<Preference
+		android:key="about_credits_bitcoinj"
+		android:summary="https://github.com/dobbs" >
+		<intent
+			android:action="android.intent.action.VIEW"
+			android:data="https://github.com/dobbscoin" />
+	</Preference>
+	<Preference
+		android:key="about_credits_zxing"
+		android:summary="https://github.com/zxing/zxing"
+		android:title="@string/about_credits_zxing_title" >
+		<intent
+			android:action="android.intent.action.VIEW"
+			android:data="https://github.com/zxing/zxing" />
+	</Preference>
+	<Preference
 		android:key="about_credits_icon"
-		android:summary="http://www.dobbscoin.info"
+		android:summary="http://www.dobbscoin.net"
 		android:title="@string/about_credits_icon_title" >
 		<intent
 			android:action="android.intent.action.VIEW"
-			android:data="http://www.dobbscoin.info" />
+			android:data="http://www.dobbscoin.net" />
 	</Preference>
 
 

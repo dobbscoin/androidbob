@@ -82,7 +82,7 @@ public abstract class InputParser
 		@Override
 		public void parse()
 		{
-			if (input.startsWith("BITCOIN:-"))
+			if (input.startsWith("DOBBSCOIN:-"))
 			{
 				try
 				{
@@ -109,7 +109,7 @@ public abstract class InputParser
 					error(R.string.input_parser_invalid_paymentrequest, x.getMessage());
 				}
 			}
-			else if (input.startsWith("bitcoin:"))
+			else if (input.startsWith("dobbscoin:"))
 			{
 				try
 				{

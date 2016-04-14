@@ -401,10 +401,17 @@ public class ExchangeRatesProvider extends ContentProvider
 							{
 								try
 								{
-									double rateForBtc = Double.parseDouble(rateStr);
-									rateStr = String.format("%.8f", rateForBtc * btcRate).replace(",", ".");
-									final Fiat rate = Fiat.parseFiat(currencyCode, rateStr);
+								double rateForBTC = Double.parseDouble(rateStr);
+									DecimalFormat df = new DecimalFormat("#.##");
+									df.setRoundingMode(RoundingMode.HALF_UP);
+									DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+									dfs.setDecimalSeparator('.');
+									dfs.setGroupingSeparator(',');
+									df.setDecimalFormatSymbols(dfs);
 
+									//rateStr = String.format("%.8f", rateForBTC * btcRate).replace(",", ".");
+									final Fiat rate = Fiat.parseFiat(currencyCode, df.format(btcRate*rateForBTC));
+									//final Fiat rate = Fiat.parseFiat(currencyCode, rateStr);
 									if (rate.signum() > 0)
 									{
 										rates.put(currencyCode, new ExchangeRate(new org.bitcoinj.utils.ExchangeRate(rate), source));

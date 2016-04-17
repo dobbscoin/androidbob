@@ -34,6 +34,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.math.RoundingMode;
+
 import javax.annotation.Nullable;
 
 import org.bitcoinj.core.Coin;

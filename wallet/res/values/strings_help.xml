@@ -4,11 +4,11 @@
 	<string name="help_wallet">
 <![CDATA[
 		<p>
-			The upper left part of the screen displays your balance in dobbscoins and one selected national currency.
+			The upper left part of the screen displays your balance in Dobbscoins and one selected national currency.
 			Tap to go to the list of national currencies, and tap on one of the currencies to select it as default.
 		</p>
 		<p>
-			The QR code on the right contains your dobbscoin address and can be used for scanning by another party.
+			The QR code on the right contains your Dobbscoin address and can be used for scanning by another party.
 			Tap on the QR code to get a larger version of it.
 		</p>
 		<p>
@@ -25,19 +25,19 @@
 	<string name="help_request_coins">
 <![CDATA[
 		<p>
-			Using this dialog, you can request coins from another person (who should already have installed dobbscoin Wallet).
+			Using this dialog, you can request coins from another person (who should already have installed the Dobbscoin Wallet).
 		</p>
 		<p>
-			First, you can enter an amount of dobbscoins to request.
+			First, you can enter an amount of Dobbscoins to request.
 		</p>
 		<p>
 			Then, you either have the generated QR code scanned by the other person.
 			Or, you can send your request to a remote person with the share button in the action bar.
-			The other person will have to click the dobbscoin URL.
+			The other person will have to click the Dobbscoin URL.
 		</p>
 		<p>
 			Either way, the other person will be presented a dialog for sending coins with all fields pre-populated.
-			If she accepts, all she needs to do is sending the payment.
+			If they accept, all they need to do is send the payment.
 		</p>
 	]]>
 	</string>
@@ -45,15 +45,15 @@
 <![CDATA[
 		<p>
 			You have initiated the process of sending coins.
-			You came here either through the main screen or by clicking on a dobbscoin URL in your mobile browser.
+			You came here either through the main screen or by clicking on a Dobbscoin URL in your mobile browser.
 		</p>
 		<p>
-			First, you enter the dobbscoin address to pay to.
+			First, you enter the Dobbscoin address to pay to.
 			The address will autocomplete from known entries in your address book.
-			You can also scan QR codes with dobbscoin addresses or dobbscoin requests by pressing the QR button in the action bar.
+			You can also scan QR codes with Dobbscoin addresses or Dobbscoin requests by pressing the QR button in the action bar.
 		</p>
 		<p>
-			Next, you can see how many dobbscoins you can spend at the moment.
+			Next, you can see how many Dobbscoins you can spend at the moment.
 			Any difference to the balance from the main screen is still unconfirmed and can thus not yet be spent.
 		</p>
 		<p>
@@ -61,7 +61,7 @@
 		</p>
 		<p>
 			You can enter a payment while being offline.
-			It will be sent on next restart of dobbscoin Wallet.
+			It will be sent on next restart of the Dobbscoin Wallet.
 			If you want a payment to be processed as fast as possible, make sure you are well connected (i.e. on a WLAN).
 		</p>
 		<p>
@@ -86,12 +86,12 @@
 			Keep your backup safe and remember the password.
 		</p>
 		<p>
-			<b>Before uninstalling</b> (or clearing app data/wiping your device), <b>transfer your dobbscoins to another wallet</b>.
-			Remaining dobbscoins will be lost.
+			<b>Before uninstalling</b> (or clearing app data/wiping your device), <b>transfer your Dobbscoins to another wallet</b>.
+			Remaining Dobbscoins will be lost.
 		</p>
 		<p>
 			<b>Payments are irreversible</b>.
-			If you send your dobbscoins into the void, there is almost no way to get them back.
+			If you send your Dobbscoins into the void, there is almost no way to get them back.
 		</p>
 		<p>
 			<b>Keep your mobile device safe!</b>
@@ -101,7 +101,7 @@
 		</p>
 		<p>
 			Keep the risk low!
-			<b>Only use with small amounts</b> for day use.
+			<b>Only use with small amounts</b> for daily use.
 		</p>
 	]]>
 	</string>

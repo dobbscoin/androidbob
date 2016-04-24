@@ -273,7 +273,7 @@
 	<string name="about_license_title">License</string>
 	<string name="about_source_title">Source code</string>
 	<string name="about_credits_bitcoinj_title">This app is using dobbscoinj %s</string>
-	<string name="about_credits_icon_title">The Graven Image of \'Bob\' Dobbs\' Face\nis a \nregistered trademark of\nThe SubGenius Foundation, Inc.\'</string>
+        <string name="about_credits_icon_title">Get RIGHT with \"Bob\"</string>
 	<string name="about_credits_zxing_title">This app is using \'zxing\'</string>
 	<string name="about_community_googleplus_title">Google+ community</string>
 	<string name="about_community_googleplus_summary">Discussions about the app</string>

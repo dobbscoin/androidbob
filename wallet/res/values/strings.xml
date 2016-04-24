@@ -25,9 +25,9 @@
 	<string name="exchange_rates_fragment_source">Price from %s</string>
 	<string name="exchange_rates_options_search">Search exchange rate</string>
 	<string name="exchange_rates_context_set_as_default_title">Set as default foreign currency</string>
-	<string name="wallet_transactions_fragment_empty_text_received">No Dobbscoin received so far.</string>
-	<string name="wallet_transactions_fragment_empty_text_sent">No Dobbscoin sent so far.</string>
-	<string name="wallet_transactions_fragment_empty_text_howto">How to get Dobbscoin?\n\nTrade for shit,\nsell goods & services or\nrob someone.</string>
+	<string name="wallet_transactions_fragment_empty_text_received">THE WORLD ENDS TOMORROW\nAND YOU MAY DIE!!</string>
+	<string name="wallet_transactions_fragment_empty_text_sent">REPENT\nQUIT YOUR JOB\nSLACK OFF</string>
+	<string name="wallet_transactions_fragment_empty_text_howto">How to get Dobbscoin?\n\nTrade for Shit,\nSell Goods and Services\nVisit the Faucet.</string>
 	<string name="wallet_transactions_row_warning_backup">Congratulations, you\'ve Got Slack! Have you &lt;u&gt;backed up your wallet&lt;/u&gt;, to protect against loss?</string>
 	<string name="wallet_transactions_row_warning_storage_encryption">Hint: to increase the safety of your wallet, you can &lt;u&gt;encrypt your device&lt;/u&gt;. This also protects data of other apps.</string>
 	<string name="wallet_transactions_fragment_coinbase">mined</string>

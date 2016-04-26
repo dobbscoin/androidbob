@@ -91,7 +91,7 @@ public final class Constants
 	public static final String VERSION_URL = "https://wallet.schildbach.de/version";
 
 	/** MIME type used for transmitting single transactions. */
-	public static final String MIMETYPE_TRANSACTION = "application/x-BOBtx";
+	public static final String MIMETYPE_TRANSACTION = "application/x-bobtx";
 
 	/** MIME type used for transmitting wallet backups. */
 	public static final String MIMETYPE_WALLET_BACKUP = "application/x-bitcoin-wallet-backup";

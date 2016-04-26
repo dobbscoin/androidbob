@@ -406,7 +406,7 @@ public class ExchangeRatesProvider extends ContentProvider
 								try
 								{
 								double rateForBTC = Double.parseDouble(rateStr);
-									DecimalFormat df = new DecimalFormat("#.##");
+									DecimalFormat df = new DecimalFormat("#.####");
 									df.setRoundingMode(RoundingMode.HALF_UP);
 									DecimalFormatSymbols dfs = new DecimalFormatSymbols();
 									dfs.setDecimalSeparator('.');

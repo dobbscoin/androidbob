@@ -4,37 +4,19 @@
 	android:layout_height="wrap_content" >
 
 	<LinearLayout
-		android:id="@+id/wallet_balance_full"
+		android:id="@+id/wallet_balance"
 		style="@style/My.Widget.Button.Borderless.Unpadded"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:gravity="center"
 		android:orientation="vertical" >
-		
-		<RelativeLayout
-			android:id="@+id/wallet_balance"
-			style="@style/My.Widget.Button.Borderless.Unpadded"
-			android:layout_width="match_parent"
-			android:layout_height="60.0sp"
-			android:orientation="horizontal" >
-			
-			<de.schildbach.wallet.ui.CurrencyTextView
-				android:id="@+id/wallet_balance_BOB"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_centerInParent="true"	
-				android:layout_marginLeft="12sp"
-				android:textSize="@dimen/font_size_huge" />
 
-			<ImageView
-				android:id="@+id/wallet_image_BOB"
-				android:layout_width="60.0sp"
-				android:layout_height="60.0sp"
-				android:layout_toLeftOf="@+id/wallet_balance_BOB"
-				android:src="@drawable/icon_app_color_48dp" />
-				
-		</RelativeLayout>		
-		
+		<de.schildbach.wallet.ui.CurrencyTextView
+			android:id="@+id/wallet_balance_BOB"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textSize="@dimen/font_size_huge" />
+
 		<TextView
 			android:id="@+id/wallet_balance_too_much"
 			android:layout_width="wrap_content"

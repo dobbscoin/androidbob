@@ -68,6 +68,11 @@
 			android:key="labs_qr_payment_request"
 			android:summary="Use payment protocol for QR-code initiated payments"
 			android:title="BIP70 for scan-to-pay" />
+		<CheckBoxPreference
+			android:defaultValue="true"
+			android:key="labs_show_balance_in_btc"
+			android:summary="Show your coin balance in BTC instead of fiat equivalent"
+			android:title="Show balance in BTC" />
 	</PreferenceCategory>
 
 </PreferenceScreen>

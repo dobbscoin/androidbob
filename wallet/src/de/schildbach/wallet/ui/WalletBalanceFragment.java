@@ -282,16 +282,23 @@ public final class WalletBalanceFragment extends Fragment
 				{
 					if (exchangeRate != null)
 					{
-						Double btcRate = 0.0;
-						Object result = ExchangeRatesProvider.getCoinValueBTC_bittrex();
-						btcRate= (Double)result;
-                        
-						//final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
-                        final Fiat localValue = exchangeRate.rate.coinToBTC(balance, btcRate);
-						viewBalanceLocal.setVisibility(View.VISIBLE);
-						//viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
-						viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + "BTC"));
-                        viewBalanceLocal.setAmount(localValue);
+						if (config.showBalanceInBTCEnabled()) {
+							Double btcRate = 0.0;
+							Object result = ExchangeRatesProvider.getCoinValueBTC_bittrex();
+							btcRate= (Double)result;
+
+							final Fiat localValue = exchangeRate.rate.coinToBTC(balance, btcRate);
+							viewBalanceLocal.setVisibility(View.VISIBLE);
+							viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + "BTC"));
+							viewBalanceLocal.setAmount(localValue);
+						}
+						else {
+							final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
+							viewBalanceLocal.setVisibility(View.VISIBLE);
+							viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
+							viewBalanceLocal.setAmount(localValue);
+						}
+
 						viewBalanceLocal.setTextColor(getResources().getColor(R.color.fg_less_significant));
 					}
 					else

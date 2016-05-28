@@ -216,6 +216,10 @@ public final class WalletBalanceFragment extends Fragment
 			throw new RuntimeException(x);
 		}
 	}
+	public void enableSm(){
+		StrictMode.ThreadPolicy policy= new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		StrictMode.setThreadPolicy(policy);
+	}
 
 	private void updateView()
 	{
@@ -277,7 +281,7 @@ public final class WalletBalanceFragment extends Fragment
 				final boolean tooMuch = balance.isGreaterThan(TOO_MUCH_BALANCE_THRESHOLD);
 
 				viewBalanceTooMuch.setVisibility(tooMuch ? View.VISIBLE : View.GONE);
-
+				enableSm();
 				if (showLocalBalance)
 				{
 					if (exchangeRate != null)

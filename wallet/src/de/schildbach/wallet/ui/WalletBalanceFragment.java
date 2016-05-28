@@ -32,6 +32,7 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;

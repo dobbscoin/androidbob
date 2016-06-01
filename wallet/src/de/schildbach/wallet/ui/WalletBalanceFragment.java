@@ -32,6 +32,7 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -84,8 +85,8 @@ public final class WalletBalanceFragment extends Fragment
 	private static final int ID_BLOCKCHAIN_STATE_LOADER = 2;
 
 	private static final long BLOCKCHAIN_UPTODATE_THRESHOLD_MS = DateUtils.HOUR_IN_MILLIS;
-	private static final Coin SOME_BALANCE_THRESHOLD = Coin.COIN.divide(20);
-	private static final Coin TOO_MUCH_BALANCE_THRESHOLD = Coin.COIN.multiply(4);
+	private static final Coin SOME_BALANCE_THRESHOLD = Coin.COIN.multiply(1000);
+	private static final Coin TOO_MUCH_BALANCE_THRESHOLD = Coin.COIN.multiply(2500000);
 
 	@Override
 	public void onAttach(final Activity activity)
@@ -216,6 +217,10 @@ public final class WalletBalanceFragment extends Fragment
 			throw new RuntimeException(x);
 		}
 	}
+	public void enableSm(){
+		StrictMode.ThreadPolicy policy= new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		StrictMode.setThreadPolicy(policy);
+	}
 
 	private void updateView()
 	{
@@ -277,15 +282,28 @@ public final class WalletBalanceFragment extends Fragment
 				final boolean tooMuch = balance.isGreaterThan(TOO_MUCH_BALANCE_THRESHOLD);
 
 				viewBalanceTooMuch.setVisibility(tooMuch ? View.VISIBLE : View.GONE);
-
+				enableSm();
 				if (showLocalBalance)
 				{
 					if (exchangeRate != null)
 					{
-						final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
-						viewBalanceLocal.setVisibility(View.VISIBLE);
-						viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
-						viewBalanceLocal.setAmount(localValue);
+						if (config.showBalanceInBTCEnabled()) {
+							Double btcRate = 0.0;
+							Object result = ExchangeRatesProvider.getCoinValueBTC_bittrex();
+							btcRate= (Double)result;
+
+							final Fiat localValue = exchangeRate.rate.coinToBTC(balance, btcRate);
+							viewBalanceLocal.setVisibility(View.VISIBLE);
+							viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + "BTC"));
+							viewBalanceLocal.setAmount(localValue);
+						}
+						else {
+							final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
+							viewBalanceLocal.setVisibility(View.VISIBLE);
+							viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
+							viewBalanceLocal.setAmount(localValue);
+						}
+
 						viewBalanceLocal.setTextColor(getResources().getColor(R.color.fg_less_significant));
 					}
 					else

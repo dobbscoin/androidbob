@@ -34,6 +34,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.math.RoundingMode;
+
 import javax.annotation.Nullable;
 
 import org.bitcoinj.core.Coin;
@@ -402,7 +406,7 @@ public class ExchangeRatesProvider extends ContentProvider
 								try
 								{
 								double rateForBTC = Double.parseDouble(rateStr);
-									DecimalFormat df = new DecimalFormat("#.##");
+									DecimalFormat df = new DecimalFormat("#.####");
 									df.setRoundingMode(RoundingMode.HALF_UP);
 									DecimalFormatSymbols dfs = new DecimalFormatSymbols();
 									dfs.setDecimalSeparator('.');

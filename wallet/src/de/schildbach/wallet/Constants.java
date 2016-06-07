@@ -81,7 +81,7 @@ public final class Constants
 	/** Maximum size of backups. Files larger will be rejected. */
 	public static final long BACKUP_MAX_CHARS = 10000000;
 
-	private static final String BITEASY_API_URL_PROD = "https://api.biteasy.com/v2/btc/mainnet/";
+	private static final String BITEASY_API_URL_PROD = "http://explorer.dobbscoin.info";
 	private static final String BITEASY_API_URL_TEST = "https://api.biteasy.com/v2/btc/testnet/";
 	/** Base URL for blockchain API. */
 	public static final String BITEASY_API_URL = NETWORK_PARAMETERS.getId().equals(NetworkParameters.ID_MAINNET) ? BITEASY_API_URL_PROD
@@ -91,7 +91,7 @@ public final class Constants
 	public static final String VERSION_URL = "https://wallet.schildbach.de/version";
 
 	/** MIME type used for transmitting single transactions. */
-	public static final String MIMETYPE_TRANSACTION = "application/x-BOBtx";
+	public static final String MIMETYPE_TRANSACTION = "application/x-bobtx";
 
 	/** MIME type used for transmitting wallet backups. */
 	public static final String MIMETYPE_WALLET_BACKUP = "application/x-bitcoin-wallet-backup";

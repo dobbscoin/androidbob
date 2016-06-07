@@ -52,6 +52,12 @@
 			android:targetPackage="com.android.settings" />
 	</Preference>
 
+    <CheckBoxPreference
+		android:defaultValue="true"
+		android:key="labs_show_balance_in_btc"
+		android:summary="Show your coin balance in BTC instead of fiat equivalent"
+		android:title="Show balance in BTC" />
+            
 	<PreferenceCategory android:title="@string/preferences_category_labs" >
 		<Preference
 			android:icon="@drawable/ic_warning_grey600_24dp"

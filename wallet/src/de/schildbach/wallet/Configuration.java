@@ -54,9 +54,10 @@ public class Configuration
 	public static final String PREFS_KEY_TRUSTED_PEER_ONLY = "trusted_peer_only";
 	public static final String PREFS_KEY_BLOCK_EXPLORER = "block_explorer";
 	public static final String PREFS_KEY_DATA_USAGE = "data_usage";
+	private static final String PREFS_KEY_BALANCE_IN_BTC = "show_balance_in_btc";
 	public static final String PREFS_KEY_DISCLAIMER = "disclaimer";
 	private static final String PREFS_KEY_LABS_QR_PAYMENT_REQUEST = "labs_qr_payment_request";
-
+    
 	private static final String PREFS_KEY_LAST_VERSION = "last_version";
 	private static final String PREFS_KEY_LAST_USED = "last_used";
 	private static final String PREFS_KEY_BEST_CHAIN_HEIGHT_EVER = "best_chain_height_ever";
@@ -203,6 +204,11 @@ public class Configuration
 		return prefs.getBoolean(PREFS_KEY_LABS_QR_PAYMENT_REQUEST, false);
 	}
 
+    public boolean showBalanceInBTCEnabled()
+	{
+		return prefs.getBoolean(PREFS_KEY_BALANCE_IN_BTC, true);
+	}
+    
 	public boolean versionCodeCrossed(final int currentVersionCode, final int triggeringVersionCode)
 	{
 		final boolean wasBelow = lastVersionCode < triggeringVersionCode;

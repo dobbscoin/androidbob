@@ -88,7 +88,7 @@ public final class Constants
 			: BITEASY_API_URL_TEST;
 
 	/** URL to fetch version alerts from. */
-	public static final String VERSION_URL = "https://wallet.schildbach.de/version";
+	public static final String VERSION_URL = "";
 
 	/** MIME type used for transmitting single transactions. */
 	public static final String MIMETYPE_TRANSACTION = "application/x-bobtx";
@@ -131,8 +131,8 @@ public final class Constants
 
 	public static final BaseEncoding HEX = BaseEncoding.base16().lowerCase();
 
-	public static final String SOURCE_URL = "https://github.com/dobbscoin/bitcoin-wallet";
-	public static final String BINARY_URL = "https://github.com/dobbscoin/dobbscoin-wallet/releases";
+	public static final String SOURCE_URL = "https://github.com/dobbscoin/androidbob";
+	public static final String BINARY_URL = "https://github.com/dobbscoin/androidbob/releases";
 	public static final String MARKET_APP_URL = "";
 	public static final String WEBMARKET_APP_URL = "";
 

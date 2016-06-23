@@ -3,8 +3,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	package="subgeneius.dobbs.wallet"
 	android:installLocation="internalOnly"
-	android:versionCode="243"
-	android:versionName="5.0.2" >
+	android:versionCode="244"
+	android:versionName="5.0.3" >
 
 	<uses-sdk
 		android:minSdkVersion="15"

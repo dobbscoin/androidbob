@@ -210,7 +210,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		notification.setContentTitle(msg);
 		if (text.length() > 0)
 			notification.setContentText(text);
-		notification.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, WalletActivity.class), 0));
+		notification.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, WalletActivity.class), PendingIntent.FLAG_IMMUTABLE));
 		notification.setNumber(notificationCount == 1 ? 0 : notificationCount);
 		notification.setWhen(System.currentTimeMillis());
 		notification.setSound(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.coins_received));
@@ -280,7 +280,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 						notification.setContentTitle(getString(R.string.app_name));
 						notification.setContentText(getString(R.string.notification_peers_connected_msg, numPeers));
 						notification.setContentIntent(PendingIntent.getActivity(BlockchainServiceImpl.this, 0, new Intent(BlockchainServiceImpl.this,
-								WalletActivity.class), 0));
+								WalletActivity.class), PendingIntent.FLAG_IMMUTABLE));
 						notification.setWhen(System.currentTimeMillis());
 						notification.setOngoing(true);
 						nm.notify(NOTIFICATION_ID_CONNECTED, notification.getNotification());

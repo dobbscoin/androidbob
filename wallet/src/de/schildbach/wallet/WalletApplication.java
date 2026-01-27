@@ -560,7 +560,7 @@ public class WalletApplication extends Application
 				alarmInterval / DateUtils.MINUTE_IN_MILLIS);
 
 		final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-		final PendingIntent alarmIntent = PendingIntent.getService(context, 0, new Intent(context, BlockchainServiceImpl.class), 0);
+		final PendingIntent alarmIntent = PendingIntent.getService(context, 0, new Intent(context, BlockchainServiceImpl.class), PendingIntent.FLAG_IMMUTABLE);
 		alarmManager.cancel(alarmIntent);
 
 		// workaround for no inexact set() before KitKat

@@ -1,19 +1,11 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
+// Top-level build file for Dobbscoin Wallet
+// Updated for modern Gradle 8.x and AGP 8.x
 
-    dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
-        classpath('fr.avianey.androidsvgdrawable:gradle-plugin:1.0.2') {
-            exclude group: 'xerces'
-        }
-    }
+plugins {
+    id 'com.android.application' version '8.7.0' apply false
+    id 'com.android.library' version '8.7.0' apply false
 }
 
-allprojects {
-    repositories {
-        jcenter()
-        mavenLocal()
-    }
-}
+// Note: The androidsvgdrawable plugin is no longer maintained
+// SVG to PNG conversion should be done manually or with Android Studio's
+// Vector Asset Studio, or by using vector drawables directly

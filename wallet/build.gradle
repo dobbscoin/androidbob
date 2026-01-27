@@ -1,48 +1,40 @@
-apply plugin: 'com.android.application'
-apply plugin: 'androidsvgdrawable'
-
-dependencies {
-    compile(project(':integration-android')) {
-        exclude(group: 'com.google.android', module: 'android')
-    }
-    compile 'com.android.support:support-annotations:23.1.1'
-    compile 'com.android.support:support-v4:23.1.1'
-    compile 'com.android.support:support-v13:23.1.1'
-    compile 'com.android.support:recyclerview-v7:23.1.1'
-    compile 'com.android.support:cardview-v7:23.1.1'
-    compile 'org.bitcoinj:dobbsdroidj-core:0.13.5'
-    compile 'com.google.protobuf:protobuf-java:2.5.0'
-    compile 'com.google.guava:guava:16.0.1'
-    compile 'com.google.zxing:core:3.2.1'
-    compile 'org.slf4j:slf4j-api:1.7.12'
-    compile('com.github.tony19:logback-android-classic:1.1.1-3') {
-        exclude(group: 'com.google.android', module: 'android')
-    }
-    compile 'com.github.tony19:logback-android-core:1.1.1-3'
-    compile 'com.google.code.findbugs:jsr305:2.0.3'
-    testCompile 'junit:junit:4.11'
-}
-
-ext {
-    archivesBaseName = 'dobbscoin-wallet'
+plugins {
+    id 'com.android.application'
 }
 
 android {
-    compileSdkVersion 'android-23'
-    buildToolsVersion '23.0.2'
+    namespace 'subgeneius.dobbs.wallet'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
 
-    lintOptions {
+    defaultConfig {
+        applicationId 'subgeneius.dobbs.wallet'
+        minSdk 21
+        targetSdk 35
+        versionCode 245
+        versionName '5.1.0'
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
         abortOnError false
         disable 'MissingTranslation'
     }
 
     buildTypes {
-        all {
+        release {
             minifyEnabled true
-            proguardFile 'proguard.cfg'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard.cfg'
         }
         debug {
             debuggable true
+            minifyEnabled false
         }
     }
 
@@ -59,22 +51,67 @@ android {
         }
     }
 
-    packagingOptions {
-        exclude 'lib/x86_64/darwin/libscrypt.dylib'
-        exclude 'lib/x86_64/freebsd/libscrypt.so'
-        exclude 'lib/x86_64/linux/libscrypt.so'
-        exclude 'com/google/thirdparty/publicsuffix/PublicSuffixPatterns.gwt.xml'
-        exclude 'com/google/thirdparty/publicsuffix/PublicSuffixType.gwt.xml'
-        exclude 'org/bitcoinj/crypto/mnemonic/wordlist/english.txt'
-        exclude 'org/bitcoinj/crypto/cacerts'
-        exclude 'org.bitcoin.production.checkpoints'
-        exclude 'org.bitcoin.test.checkpoints'
+    packaging {
+        resources {
+            excludes += [
+                'lib/x86_64/darwin/libscrypt.dylib',
+                'lib/x86_64/freebsd/libscrypt.so',
+                'lib/x86_64/linux/libscrypt.so',
+                'com/google/thirdparty/publicsuffix/PublicSuffixPatterns.gwt.xml',
+                'com/google/thirdparty/publicsuffix/PublicSuffixType.gwt.xml',
+                'org/bitcoinj/crypto/mnemonic/wordlist/english.txt',
+                'org/bitcoinj/crypto/cacerts',
+                'org.bitcoin.production.checkpoints',
+                'org.bitcoin.test.checkpoints'
+            ]
+        }
     }
 }
 
-task svgToPng(type: fr.avianey.androidsvgdrawable.gradle.SvgDrawableTask) {
-    from = file('graphics')
-    to = file('res')
-    targetedDensities = ['hdpi', 'xhdpi', 'xxhdpi']
-    outputFormat = 'PNG'
+configurations.all {
+    // Resolve Kotlin stdlib version conflict
+    resolutionStrategy {
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+    }
+}
+
+dependencies {
+    implementation project(':integration-android')
+
+    // AndroidX libraries
+    implementation 'androidx.annotation:annotation:1.7.0'
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'androidx.fragment:fragment:1.6.2'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation 'androidx.loader:loader:1.1.0'
+    implementation 'androidx.viewpager:viewpager:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v13:1.0.0'
+
+    // Dobbscoin/Bitcoin libraries - using JitPack for dobbscoinj
+    // Note: dobbsdroidj-core doesn't exist on Maven Central, using lateminer/dobbscoinj from GitHub
+    // Full commit SHA: 5f18f760dc84375bd340947f93b4ef19fc50089c
+    // Maven artifact ID in repo is 'dobbsdroidj-core'
+    implementation 'com.github.lateminer.dobbscoinj:dobbsdroidj-core:5f18f760dc'
+    implementation 'com.google.protobuf:protobuf-java:3.25.1'
+    implementation 'com.google.guava:guava:32.1.3-android'
+    implementation 'com.google.zxing:core:3.5.2'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'com.github.tony19:logback-android:3.0.0'
+
+    // Code quality
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+}
+
+// Archive base name for APK output
+base {
+    archivesName = 'dobbscoin-wallet'
 }

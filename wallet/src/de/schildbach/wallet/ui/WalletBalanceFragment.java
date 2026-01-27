@@ -195,11 +195,10 @@ public final class WalletBalanceFragment extends Fragment
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case R.id.wallet_balance_options_donate:
-				handleDonate();
-				return true;
+		int id = item.getItemId();
+		if (id == R.id.wallet_balance_options_donate) {
+			handleDonate();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -287,22 +286,12 @@ public final class WalletBalanceFragment extends Fragment
 				{
 					if (exchangeRate != null)
 					{
-						if (config.showBalanceInBTCEnabled()) {
-							Double btcRate = 0.0;
-							Object result = ExchangeRatesProvider.getCoinValueBTC_bittrex();
-							btcRate= (Double)result;
-
-							final Fiat localValue = exchangeRate.rate.coinToBTC(balance, btcRate);
-							viewBalanceLocal.setVisibility(View.VISIBLE);
-							viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + "BTC"));
-							viewBalanceLocal.setAmount(localValue);
-						}
-						else {
-							final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
-							viewBalanceLocal.setVisibility(View.VISIBLE);
-							viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
-							viewBalanceLocal.setAmount(localValue);
-						}
+						// Note: BTC conversion (coinToBTC) was a custom feature not available in standard dobbscoinj
+						// Falling back to fiat display only
+						final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
+						viewBalanceLocal.setVisibility(View.VISIBLE);
+						viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
+						viewBalanceLocal.setAmount(localValue);
 
 						viewBalanceLocal.setTextColor(getResources().getColor(R.color.fg_less_significant));
 					}

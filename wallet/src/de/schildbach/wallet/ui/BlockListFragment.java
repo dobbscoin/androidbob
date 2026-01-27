@@ -45,9 +45,9 @@ import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -182,12 +182,11 @@ public final class BlockListFragment extends Fragment implements BlockListAdapte
 			@Override
 			public boolean onMenuItemClick(final MenuItem item)
 			{
-				switch (item.getItemId())
-				{
-					case R.id.blocks_context_browse:
-						startActivity(new Intent(Intent.ACTION_VIEW,
-								Uri.withAppendedPath(config.getBlockExplorer(), "block/" + block.getHeader().getHashAsString())));
-						return true;
+				int id = item.getItemId();
+				if (id == R.id.blocks_context_browse) {
+					startActivity(new Intent(Intent.ACTION_VIEW,
+							Uri.withAppendedPath(config.getBlockExplorer(), "block/" + block.getHeader().getHashAsString())));
+					return true;
 				}
 				return false;
 			}

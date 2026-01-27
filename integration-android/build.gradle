@@ -1,9 +1,15 @@
-apply plugin: 'java'
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 dependencies {
-    compile('com.google.android:android:4.0.1.2') {
-        transitive false
-    }
+    // Android stubs for compilation - this is a library module
+    compileOnly 'com.google.android:android:4.1.1.4'
 }
 
 sourceSets {
@@ -15,9 +21,4 @@ sourceSets {
             srcDir 'src'
         }
     }
-}
-
-compileJava {
-    sourceCompatibility '1.5'
-    targetCompatibility '1.5'
 }

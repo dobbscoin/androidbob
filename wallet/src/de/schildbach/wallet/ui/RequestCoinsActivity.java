@@ -46,15 +46,13 @@ public final class RequestCoinsActivity extends AbstractBindServiceActivity
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case android.R.id.home:
-				finish();
-				return true;
-
-			case R.id.request_coins_options_help:
-				HelpDialogFragment.page(getFragmentManager(), R.string.help_request_coins);
-				return true;
+		int id = item.getItemId();
+		if (id == android.R.id.home) {
+			finish();
+			return true;
+		} else if (id == R.id.request_coins_options_help) {
+			HelpDialogFragment.page(getFragmentManager(), R.string.help_request_coins);
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

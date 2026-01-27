@@ -1,17 +1,28 @@
-apply plugin: 'com.android.application'
-
-dependencies {
-    compile(project(':integration-android')) {
-        exclude(group: 'com.google.android', module: 'android')
-    }
-    compile 'org.bitcoinj:dobbsdroidj-core:0.13.5'
+plugins {
+    id 'com.android.application'
 }
 
 android {
-    compileSdkVersion 'android-23'
-    buildToolsVersion '23.0.2'
+    namespace 'de.schildbach.wallet.integration.sample'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
 
-    lintOptions { abortOnError false }
+    defaultConfig {
+        applicationId 'de.schildbach.wallet.integration.sample'
+        minSdk 21
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+    }
 
     sourceSets {
         main {
@@ -22,13 +33,23 @@ android {
         }
     }
 
-    packagingOptions {
-        exclude 'lib/x86_64/darwin/libscrypt.dylib'
-        exclude 'lib/x86_64/freebsd/libscrypt.so'
-        exclude 'lib/x86_64/linux/libscrypt.so'
-        exclude 'com/google/thirdparty/publicsuffix/PublicSuffixPatterns.gwt.xml'
-        exclude 'com/google/thirdparty/publicsuffix/PublicSuffixType.gwt.xml'
-        exclude 'org/bitcoinj/crypto/mnemonic/wordlist/english.txt'
-        exclude 'org/bitcoinj/crypto/cacerts'
+    packaging {
+        resources {
+            excludes += [
+                'lib/x86_64/darwin/libscrypt.dylib',
+                'lib/x86_64/freebsd/libscrypt.so',
+                'lib/x86_64/linux/libscrypt.so',
+                'com/google/thirdparty/publicsuffix/PublicSuffixPatterns.gwt.xml',
+                'com/google/thirdparty/publicsuffix/PublicSuffixType.gwt.xml',
+                'org/bitcoinj/crypto/mnemonic/wordlist/english.txt',
+                'org/bitcoinj/crypto/cacerts'
+            ]
+        }
     }
+}
+
+dependencies {
+    implementation project(':integration-android')
+    // Using JitPack for dobbscoinj (multi-module project)
+    implementation 'com.github.lateminer.dobbscoinj:dobbsdroidj-core:5f18f760dc'
 }

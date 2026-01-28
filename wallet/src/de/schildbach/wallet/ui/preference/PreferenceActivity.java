@@ -36,11 +36,10 @@ public final class PreferenceActivity extends android.preference.PreferenceActiv
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case android.R.id.home:
-				finish();
-				return true;
+		int id = item.getItemId();
+		if (id == android.R.id.home) {
+			finish();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

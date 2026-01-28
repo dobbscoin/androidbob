@@ -59,9 +59,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateUtils;
 import android.text.style.StyleSpan;
@@ -307,27 +307,23 @@ public class WalletTransactionsFragment extends Fragment implements LoaderCallba
 			@Override
 			public boolean onMenuItemClick(final MenuItem item)
 			{
-				switch (item.getItemId())
-				{
-					case R.id.wallet_transactions_context_edit_address:
-						handleEditAddress(tx);
-						return true;
-
-					case R.id.wallet_transactions_context_show_qr:
-						handleShowQr();
-						return true;
-
-					case R.id.wallet_transactions_context_browse:
-						if (!txRotation)
-							startActivity(
-									new Intent(Intent.ACTION_VIEW, Uri.withAppendedPath(config.getBlockExplorer(), "tx/" + tx.getHashAsString())));
-						else
-							startActivity(new Intent(Intent.ACTION_VIEW, KEY_ROTATION_URI));
-						return true;
-
-					case R.id.wallet_transactions_context_raise_fee:
-						RaiseFeeDialogFragment.show(getFragmentManager(), tx);
-						return true;
+				int id = item.getItemId();
+				if (id == R.id.wallet_transactions_context_edit_address) {
+					handleEditAddress(tx);
+					return true;
+				} else if (id == R.id.wallet_transactions_context_show_qr) {
+					handleShowQr();
+					return true;
+				} else if (id == R.id.wallet_transactions_context_browse) {
+					if (!txRotation)
+						startActivity(
+								new Intent(Intent.ACTION_VIEW, Uri.withAppendedPath(config.getBlockExplorer(), "tx/" + tx.getHashAsString())));
+					else
+						startActivity(new Intent(Intent.ACTION_VIEW, KEY_ROTATION_URI));
+					return true;
+				} else if (id == R.id.wallet_transactions_context_raise_fee) {
+					RaiseFeeDialogFragment.show(getFragmentManager(), tx);
+					return true;
 				}
 
 				return false;

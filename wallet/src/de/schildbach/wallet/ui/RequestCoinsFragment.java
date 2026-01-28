@@ -52,7 +52,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
+import androidx.cardview.widget.CardView;
 import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -163,8 +163,8 @@ public final class RequestCoinsFragment extends Fragment implements NfcAdapter.C
 	{
 		super.onCreate(savedInstanceState);
 
-		if (nfcAdapter != null && nfcAdapter.isEnabled())
-			nfcAdapter.setNdefPushMessageCallback(this, activity);
+		// Note: Android Beam (NDEF Push) was deprecated in API 29 and removed in API 34
+		// NFC sharing is no longer supported on modern Android versions
 
 		if (savedInstanceState != null)
 		{
@@ -360,19 +360,16 @@ public final class RequestCoinsFragment extends Fragment implements NfcAdapter.C
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case R.id.request_coins_options_copy:
-				handleCopy();
-				return true;
-
-			case R.id.request_coins_options_share:
-				handleShare();
-				return true;
-
-			case R.id.request_coins_options_local_app:
-				handleLocalApp();
-				return true;
+		int id = item.getItemId();
+		if (id == R.id.request_coins_options_copy) {
+			handleCopy();
+			return true;
+		} else if (id == R.id.request_coins_options_share) {
+			handleShare();
+			return true;
+		} else if (id == R.id.request_coins_options_local_app) {
+			handleLocalApp();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

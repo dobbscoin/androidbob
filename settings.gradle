@@ -1,3 +1,23 @@
-include 'wallet'
-include 'integration-android'
-include 'sample-integration-android'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+rootProject.name = 'dobbscoin-wallet'
+
+include ':wallet'
+include ':integration-android'
+include ':sample-integration-android'

@@ -250,59 +250,46 @@ public final class WalletActivity extends AbstractWalletActivity
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case R.id.wallet_options_request:
-				handleRequestCoins();
-				return true;
-
-			case R.id.wallet_options_send:
-				handleSendCoins();
-				return true;
-
-			case R.id.wallet_options_scan:
-				handleScan();
-				return true;
-
-			case R.id.wallet_options_address_book:
-				AddressBookActivity.start(this);
-				return true;
-
-			case R.id.wallet_options_exchange_rates:
-				startActivity(new Intent(this, ExchangeRatesActivity.class));
-				return true;
-
-			case R.id.wallet_options_sweep_wallet:
-				SweepWalletActivity.start(this);
-				return true;
-
-			case R.id.wallet_options_network_monitor:
-				startActivity(new Intent(this, NetworkMonitorActivity.class));
-				return true;
-
-			case R.id.wallet_options_restore_wallet:
-				showDialog(DIALOG_RESTORE_WALLET);
-				return true;
-
-			case R.id.wallet_options_backup_wallet:
-				handleBackupWallet();
-				return true;
-
-			case R.id.wallet_options_encrypt_keys:
-				handleEncryptKeys();
-				return true;
-
-			case R.id.wallet_options_preferences:
-				startActivity(new Intent(this, PreferenceActivity.class));
-				return true;
-
-			case R.id.wallet_options_safety:
-				HelpDialogFragment.page(getFragmentManager(), R.string.help_safety);
-				return true;
-
-			case R.id.wallet_options_help:
-				HelpDialogFragment.page(getFragmentManager(), R.string.help_wallet);
-				return true;
+		int id = item.getItemId();
+		if (id == R.id.wallet_options_request) {
+			handleRequestCoins();
+			return true;
+		} else if (id == R.id.wallet_options_send) {
+			handleSendCoins();
+			return true;
+		} else if (id == R.id.wallet_options_scan) {
+			handleScan();
+			return true;
+		} else if (id == R.id.wallet_options_address_book) {
+			AddressBookActivity.start(this);
+			return true;
+		} else if (id == R.id.wallet_options_exchange_rates) {
+			startActivity(new Intent(this, ExchangeRatesActivity.class));
+			return true;
+		} else if (id == R.id.wallet_options_sweep_wallet) {
+			SweepWalletActivity.start(this);
+			return true;
+		} else if (id == R.id.wallet_options_network_monitor) {
+			startActivity(new Intent(this, NetworkMonitorActivity.class));
+			return true;
+		} else if (id == R.id.wallet_options_restore_wallet) {
+			showDialog(DIALOG_RESTORE_WALLET);
+			return true;
+		} else if (id == R.id.wallet_options_backup_wallet) {
+			handleBackupWallet();
+			return true;
+		} else if (id == R.id.wallet_options_encrypt_keys) {
+			handleEncryptKeys();
+			return true;
+		} else if (id == R.id.wallet_options_preferences) {
+			startActivity(new Intent(this, PreferenceActivity.class));
+			return true;
+		} else if (id == R.id.wallet_options_safety) {
+			HelpDialogFragment.page(getFragmentManager(), R.string.help_safety);
+			return true;
+		} else if (id == R.id.wallet_options_help) {
+			HelpDialogFragment.page(getFragmentManager(), R.string.help_wallet);
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

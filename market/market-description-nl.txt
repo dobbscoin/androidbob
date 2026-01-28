@@ -1,34 +1,34 @@
-<b>Draag je Bitcoins altijd bij je, in je broekzak!</b> Je kunt vlot betalen door een QR-code te scannen. Als winkelier ontvang je je betalingen betrouwbaar en onmiddelijk. Bitcoin Wallet is de eerste mobiele Bitcoin-app, en misschien wel de veiligste!
+<b>Draag je Dobbscoin altijd bij je, in je broekzak!</b> Je kunt vlot betalen door een QR-code te scannen. Als winkelier ontvang je je betalingen betrouwbaar en onmiddelijk. Dobbscoin Wallet is de eerste mobiele Dobbscoin-app, en misschien wel de veiligste!
 
 
 <b>EIGENSCHAPPEN</b>
 
 • Geen registratie, webservice of cloud vereist! Deze portemonnee is decentraal en peer-to-peer.
-• Toon Bitcoin bedrag in BTC, mBTC en µBTC.
+• Toon Dobbscoin bedrag in DOBB, mDOBB en µDOBB.
 • Conversie van en naar nationale valuta.
-* Verzend en ontvang Bitcoin via NFC, QR-codes of Bitcoin-URL's
-• Adresboek voor regelmatig gebruikte Bitcoin-adressen.
+* Verzend en ontvang Dobbscoin via NFC, QR-codes of Dobbscoin-URL's
+• Adresboek voor regelmatig gebruikte Dobbscoin-adressen.
 • Offline kun je nog steeds betalen via Bluetooth.
-• Systeemmelding wanneer je Bitcoins ontvangt
+• Systeemmelding wanneer je Dobbscoin ontvangt
 • Opname van papieren portemonnee (b.v. voor cold storage).
-• App widget voor Bitcoin saldo.
+• App widget voor Dobbscoin saldo.
 
 
 <b>HELP MEE</b>
 
-Bitcoin Wallet is <b>open source</b> en <b>free software</b>. Licentie: GPLv3
+Dobbscoin Wallet is <b>open source</b> en <b>free software</b>. Licentie: GPLv3
 https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Onze broncode is beschikbaar op GitHub:
-https://github.com/bitcoin-wallet/bitcoin-wallet
+https://github.com/cyotee/dobbscoin
 
 Alle vertalingen worden geregeld via Transifex:
-https://www.transifex.com/bitcoin-wallet/bitcoin-wallet/
+
 
 
 <b>TESTIMONIALS</b>
 
-* Veel mobiele portemonnees baseren hun code op Bitcoin Wallet. Voorbeelden: blockchain.info, Hive en KnC.
+* Veel mobiele portemonnees baseren hun code op Dobbscoin Wallet. Voorbeelden: blockchain.info, Hive en KnC.
 * Aanbevolen mobiele portemonnee op https://bitcoin.org
 * Aangeraden door BitPay.
 

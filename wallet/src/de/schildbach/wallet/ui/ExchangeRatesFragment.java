@@ -210,13 +210,11 @@ public final class ExchangeRatesFragment extends FancyListFragment implements On
 			@Override
 			public boolean onActionItemClicked(final ActionMode mode, final MenuItem item)
 			{
-				switch (item.getItemId())
-				{
-					case R.id.exchange_rates_context_set_as_default:
-						handleSetAsDefault(exchangeRate.getCurrencyCode());
-
-						mode.finish();
-						return true;
+				int id = item.getItemId();
+				if (id == R.id.exchange_rates_context_set_as_default) {
+					handleSetAsDefault(exchangeRate.getCurrencyCode());
+					mode.finish();
+					return true;
 				}
 
 				return false;

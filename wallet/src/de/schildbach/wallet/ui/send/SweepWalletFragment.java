@@ -55,7 +55,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -320,15 +320,13 @@ public class SweepWalletFragment extends Fragment
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case R.id.sweep_wallet_options_reload:
-				handleReload();
-				return true;
-
-			case R.id.sweep_wallet_options_scan:
-				handleScan();
-				return true;
+		int id = item.getItemId();
+		if (id == R.id.sweep_wallet_options_reload) {
+			handleReload();
+			return true;
+		} else if (id == R.id.sweep_wallet_options_scan) {
+			handleScan();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

@@ -48,8 +48,8 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.CardView;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.cardview.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -99,8 +99,8 @@ public final class WalletAddressFragment extends Fragment implements NfcAdapter.
 	{
 		super.onCreate(savedInstanceState);
 
-		if (nfcAdapter != null && nfcAdapter.isEnabled())
-			nfcAdapter.setNdefPushMessageCallback(this, activity);
+		// Note: Android Beam (NDEF Push) was deprecated in API 29 and removed in API 34
+		// NFC sharing is no longer supported on modern Android versions
 	}
 
 	@Override

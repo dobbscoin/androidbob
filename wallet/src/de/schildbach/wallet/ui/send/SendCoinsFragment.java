@@ -70,7 +70,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -782,25 +782,22 @@ public final class SendCoinsFragment extends Fragment
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case R.id.send_coins_options_scan:
-				handleScan();
-				return true;
-
-			case R.id.send_coins_options_fee_category_economic:
-				handleFeeCategory(FeeCategory.ECONOMIC);
-				return true;
-			case R.id.send_coins_options_fee_category_normal:
-				handleFeeCategory(FeeCategory.NORMAL);
-				return true;
-			case R.id.send_coins_options_fee_category_priority:
-				handleFeeCategory(FeeCategory.PRIORITY);
-				return true;
-
-			case R.id.send_coins_options_empty:
-				handleEmpty();
-				return true;
+		int id = item.getItemId();
+		if (id == R.id.send_coins_options_scan) {
+			handleScan();
+			return true;
+		} else if (id == R.id.send_coins_options_fee_category_economic) {
+			handleFeeCategory(FeeCategory.ECONOMIC);
+			return true;
+		} else if (id == R.id.send_coins_options_fee_category_normal) {
+			handleFeeCategory(FeeCategory.NORMAL);
+			return true;
+		} else if (id == R.id.send_coins_options_fee_category_priority) {
+			handleFeeCategory(FeeCategory.PRIORITY);
+			return true;
+		} else if (id == R.id.send_coins_options_empty) {
+			handleEmpty();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

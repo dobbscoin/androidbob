@@ -32,8 +32,8 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -119,11 +119,10 @@ public final class AddressBookActivity extends AbstractWalletActivity
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case android.R.id.home:
-				finish();
-				return true;
+		int id = item.getItemId();
+		if (id == android.R.id.home) {
+			finish();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);

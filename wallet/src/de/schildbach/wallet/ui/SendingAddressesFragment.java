@@ -223,15 +223,13 @@ public final class SendingAddressesFragment extends FancyListFragment implements
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item)
 	{
-		switch (item.getItemId())
-		{
-			case R.id.sending_addresses_options_paste:
-				handlePasteClipboard();
-				return true;
-
-			case R.id.sending_addresses_options_scan:
-				handleScan();
-				return true;
+		int id = item.getItemId();
+		if (id == R.id.sending_addresses_options_paste) {
+			handlePasteClipboard();
+			return true;
+		} else if (id == R.id.sending_addresses_options_scan) {
+			handleScan();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -293,37 +291,27 @@ public final class SendingAddressesFragment extends FancyListFragment implements
 			@Override
 			public boolean onActionItemClicked(final ActionMode mode, final MenuItem item)
 			{
-				switch (item.getItemId())
-				{
-					case R.id.sending_addresses_context_send:
-						handleSend(getAddress(position));
-
-						mode.finish();
-						return true;
-
-					case R.id.sending_addresses_context_edit:
-						EditAddressBookEntryFragment.edit(getFragmentManager(), getAddress(position));
-
-						mode.finish();
-						return true;
-
-					case R.id.sending_addresses_context_remove:
-						handleRemove(getAddress(position));
-
-						mode.finish();
-						return true;
-
-					case R.id.sending_addresses_context_show_qr:
-						handleShowQr(getAddress(position), getLabel(position));
-
-						mode.finish();
-						return true;
-
-					case R.id.sending_addresses_context_copy_to_clipboard:
-						handleCopyToClipboard(getAddress(position));
-
-						mode.finish();
-						return true;
+				int id = item.getItemId();
+				if (id == R.id.sending_addresses_context_send) {
+					handleSend(getAddress(position));
+					mode.finish();
+					return true;
+				} else if (id == R.id.sending_addresses_context_edit) {
+					EditAddressBookEntryFragment.edit(getFragmentManager(), getAddress(position));
+					mode.finish();
+					return true;
+				} else if (id == R.id.sending_addresses_context_remove) {
+					handleRemove(getAddress(position));
+					mode.finish();
+					return true;
+				} else if (id == R.id.sending_addresses_context_show_qr) {
+					handleShowQr(getAddress(position), getLabel(position));
+					mode.finish();
+					return true;
+				} else if (id == R.id.sending_addresses_context_copy_to_clipboard) {
+					handleCopyToClipboard(getAddress(position));
+					mode.finish();
+					return true;
 				}
 
 				return false;

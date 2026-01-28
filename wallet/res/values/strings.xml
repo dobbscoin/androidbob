@@ -279,6 +279,9 @@
 	<string name="about_community_googleplus_summary">Discussions about the app</string>
 	<string name="about_market_app_title">Google Play page</string>
 	<string name="about_market_app_summary">Review or rate the app</string>
+	<string name="about_privacy_policy_title">Privacy Policy</string>
+	<string name="about_privacy_policy_summary">How we handle your data</string>
+	<string name="about_privacy_policy_url">https://cyotee.github.io/dobbscoin/PRIVACY_POLICY</string>
 	<string name="notification_coins_received_msg">Received %s</string>
 	<string name="notification_peers_connected_msg">%d peers connected</string>
 

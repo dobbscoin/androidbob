@@ -1,0 +1,32 @@
+# Android build
+.gradle/
+build/
+*/build/
+
+# Local config
+local.properties
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+
+# APK / bundles
+*.apk
+*.aab
+
+# Logs
+*.log
+
+# Keystore
+*.keystore
+*.jks
+
+# Gradle cache
+.gradle-cache/
+
+# Temporary files
+*.tmp
+*.swp

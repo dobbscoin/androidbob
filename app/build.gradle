@@ -1,0 +1,31 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+
+    namespace "finance.subgenius.dobbscoin"
+
+    compileSdk 34
+
+    defaultConfig {
+
+        applicationId "finance.subgenius.dobbscoin"
+
+        minSdk 31
+        targetSdk 34
+
+        versionCode 1
+        versionName "0.1.0"
+
+    }
+
+}
+
+dependencies {
+    implementation "androidx.biometric:biometric:1.1.0"
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation "com.journeyapps:zxing-android-embedded:4.3.0"
+    implementation "com.google.zxing:core:3.5.3"
+}

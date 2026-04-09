@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F172A">
+
+    <ImageView
+        android:id="@+id/splashLogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:adjustViewBounds="true"
+        android:contentDescription="Dobbscoin splash"
+        android:maxHeight="520dp"
+        android:paddingLeft="12dp"
+        android:paddingTop="24dp"
+        android:paddingRight="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/dobbscoin_small_splash" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="28dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/splashLoadingText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:gravity="center"
+            android:text="Loading..."
+            android:textColor="#FFF7ED"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/splashMinistryButton"
+            style="@style/WalletButtonPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/wallet_button_primary"
+            android:minWidth="280dp"
+            android:text="BECOME AN ORDAINED MINISTER"
+            android:textAllCaps="false"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/splashSlogan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="YOU'LL NEVER GET A BETTER DEAL"
+            android:textColor="#FFF7ED"
+            android:textStyle="bold"
+            app:autoSizeMaxTextSize="18sp"
+            app:autoSizeMinTextSize="10sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform" />
+
+    </LinearLayout>
+
+</FrameLayout>

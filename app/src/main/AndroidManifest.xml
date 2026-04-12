@@ -5,7 +5,8 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="Dobbscoin Wallet">
+        android:label="Dobbscoin Wallet"
+        android:roundIcon="@mipmap/ic_launcher_round">
 
         <activity
             android:name=".SplashScreenActivity"
@@ -35,6 +36,14 @@
 
         <activity
             android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ExportPrivateKeyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".AboutActivity"
             android:exported="false" />
 
     </application>

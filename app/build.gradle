@@ -8,6 +8,27 @@ android {
 
     compileSdk 34
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt"
+            ]
+        }
+    }
+
     defaultConfig {
 
         applicationId "finance.subgenius.dobbscoin"
@@ -26,6 +47,11 @@ dependencies {
     implementation "androidx.biometric:biometric:1.1.0"
     implementation "androidx.security:security-crypto:1.1.0-alpha06"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation "com.google.android.gms:play-services-auth:21.2.0"
+    implementation "com.google.api-client:google-api-client-android:2.7.0"
+    implementation "com.google.http-client:google-http-client-android:1.46.3"
+    implementation "com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0"
     implementation "com.journeyapps:zxing-android-embedded:4.3.0"
     implementation "com.google.zxing:core:3.5.3"
+    implementation "org.bitcoinj:bitcoinj-core:0.15.10"
 }

@@ -7,13 +7,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class SplashScreenActivity extends Activity {
+    private static final String TAG = "SplashScreenActivity";
     private static MediaPlayer splashPlayer;
     private static final long LOADING_ANIMATION_INTERVAL_MS = 500L;
-    private static final String[] LOADING_STATES = {"Loading.", "Loading..", "Loading...", "Loading"};
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable launchWalletRunnable = this::launchWallet;
@@ -23,19 +24,24 @@ public class SplashScreenActivity extends Activity {
             if (loadingTextView == null) {
                 return;
             }
-            loadingTextView.setText(LOADING_STATES[loadingStateIndex]);
-            loadingStateIndex = (loadingStateIndex + 1) % LOADING_STATES.length;
+            loadingTextView.setText(buildLoadingText(dotCount));
+            dotCount++;
+            if (dotCount > 10) {
+                dotCount = 1;
+            }
             handler.postDelayed(this, LOADING_ANIMATION_INTERVAL_MS);
         }
     };
 
     private boolean launched;
     private TextView loadingTextView;
-    private int loadingStateIndex;
+    private int dotCount = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String walletId = WalletIdentityStore.getOrCreateWalletId(this);
+        Log.i(TAG, "Startup wallet_id=" + walletId);
         setContentView(R.layout.activity_splash);
         loadingTextView = findViewById(R.id.splashLoadingText);
         Button splashMinistryButton = findViewById(R.id.splashMinistryButton);
@@ -105,5 +111,13 @@ public class SplashScreenActivity extends Activity {
         }
         startActivity(intent);
         finish();
+    }
+
+    private String buildLoadingText(int dotCount) {
+        StringBuilder builder = new StringBuilder("Loading");
+        for (int i = 0; i < dotCount; i++) {
+            builder.append('.');
+        }
+        return builder.toString();
     }
 }

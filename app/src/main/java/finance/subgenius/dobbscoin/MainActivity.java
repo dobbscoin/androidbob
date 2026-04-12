@@ -12,6 +12,7 @@ import android.view.ContextThemeWrapper;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,6 +20,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -53,10 +55,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -69,11 +71,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
     private static final String ADDRESS_URL = "https://wallet.subgenius.finance/api/address";
     private static final String BALANCE_URL = "https://wallet.subgenius.finance/api/balance";
     private static final String HISTORY_URL = "https://wallet.subgenius.finance/api/history";
     private static final String STATUS_URL = "https://wallet.subgenius.finance/api/status";
     private static final String SEND_URL = "https://wallet.subgenius.finance/api/send";
+    private static final String UTXOS_URL = "https://wallet.subgenius.finance/api/utxos";
     private static final String ESTIMATE_SMART_FEE_URL = "https://wallet.subgenius.finance/api/estimatesmartfee";
     private static final int TAB_MAIN = 0;
     private static final int TAB_RECEIVE = 1;
@@ -89,6 +93,7 @@ public class MainActivity extends Activity {
     private static final BigDecimal DEFAULT_FEE = new BigDecimal("0.00100000");
     private static final BigDecimal FALLBACK_FEE_RATE = new BigDecimal("0.00400000");
     private static final BigDecimal ESTIMATED_TX_SIZE_KB = new BigDecimal("0.25");
+    private static final BigDecimal MIN_DISPLAY_BOB = new BigDecimal("0.00000001");
     private static final DateTimeFormatter DATE_FORMATTER =
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z", Locale.US);
 
@@ -136,10 +141,18 @@ public class MainActivity extends Activity {
     private BigDecimal currentFee = DEFAULT_FEE;
     private String pendingSendAddress;
     private BigDecimal pendingSendAmount;
+    private WalletManager walletManager;
+    private TransactionSigner transactionSigner;
+    private String walletId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        walletId = WalletIdentityStore.getOrCreateWalletId(this);
+        Log.i(TAG, "Startup wallet_id=" + walletId);
+        walletManager = new WalletManager(this);
+        walletManager.ensureWallet();
+        transactionSigner = new TransactionSigner(walletManager);
 
         setContentView(buildContentView());
         renderConnectionState(ConnectionState.SYNCING);
@@ -287,9 +300,18 @@ public class MainActivity extends Activity {
         content.addView(addressLabel, addressLabelParams);
 
         mainAddressView = bodyText("Loading receive address...");
+        styleReceiveAddressView(mainAddressView);
         LinearLayout.LayoutParams mainAddressParams = matchWrapParams();
         mainAddressParams.topMargin = dp(8);
         content.addView(mainAddressView, mainAddressParams);
+
+        Button copyMainAddressButton = createActionButton("Copy Address", R.style.WalletButtonSecondary);
+        copyMainAddressButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0);
+        copyMainAddressButton.setCompoundDrawablePadding(dp(8));
+        copyMainAddressButton.setOnClickListener(v -> copyAddressToClipboard());
+        LinearLayout.LayoutParams copyMainAddressParams = matchWrapParams();
+        copyMainAddressParams.topMargin = dp(12);
+        content.addView(copyMainAddressButton, copyMainAddressParams);
 
         LinearLayout settingsContainer = new LinearLayout(this);
         settingsContainer.setOrientation(LinearLayout.HORIZONTAL);
@@ -315,9 +337,18 @@ public class MainActivity extends Activity {
         content.addView(buildScreenSectionTitle("Receive Address"), matchWrapParams());
 
         addressView = bodyText("Loading receive address...");
+        styleReceiveAddressView(addressView);
         LinearLayout.LayoutParams addressParams = matchWrapParams();
         addressParams.topMargin = dp(8);
         content.addView(addressView, addressParams);
+
+        Button copyReceiveAddressButton = createActionButton("Copy Address", R.style.WalletButtonSecondary);
+        copyReceiveAddressButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0);
+        copyReceiveAddressButton.setCompoundDrawablePadding(dp(8));
+        copyReceiveAddressButton.setOnClickListener(v -> copyAddressToClipboard());
+        LinearLayout.LayoutParams copyReceiveAddressParams = matchWrapParams();
+        copyReceiveAddressParams.topMargin = dp(12);
+        content.addView(copyReceiveAddressButton, copyReceiveAddressParams);
 
         TextView qrLabel = buildScreenSectionTitle("QR Code");
         LinearLayout.LayoutParams qrLabelParams = matchWrapParams();
@@ -593,11 +624,7 @@ public class MainActivity extends Activity {
 
         executor.execute(() -> {
             try {
-                JSONObject addressPayload = fetchJson(ADDRESS_URL);
-                if (!addressPayload.has("address")) {
-                    throw new IllegalStateException("Missing address field");
-                }
-                String address = addressPayload.getString("address");
+                String address = walletManager.getReceiveAddress();
                 runOnUiThread(() -> renderAddress(address));
             } catch (Exception e) {
                 String message = e.getMessage();
@@ -641,16 +668,15 @@ public class MainActivity extends Activity {
     }
 
     private WalletData fetchWalletData(boolean includeAddress) throws Exception {
+        List<String> trackedAddresses = walletManager.getTrackedAddresses();
         JSONObject statusPayload = fetchJson(STATUS_URL);
-        JSONObject balancePayload = fetchJson(BALANCE_URL);
-        JSONObject historyPayload = fetchJson(HISTORY_URL);
-        JSONObject addressPayload = includeAddress ? fetchJson(ADDRESS_URL) : null;
-        return parseWalletData(statusPayload, addressPayload, balancePayload, historyPayload, includeAddress);
+        JSONObject balancePayload = fetchJson(buildAddressQueryUrl(BALANCE_URL, trackedAddresses));
+        JSONObject historyPayload = fetchJson(buildAddressQueryUrl(HISTORY_URL, trackedAddresses));
+        return parseWalletData(statusPayload, balancePayload, historyPayload, includeAddress);
     }
 
     private WalletData parseWalletData(
         JSONObject statusPayload,
-        JSONObject addressPayload,
         JSONObject balancePayload,
         JSONObject historyPayload,
         boolean includeAddress
@@ -661,11 +687,6 @@ public class MainActivity extends Activity {
         if (!statusPayload.has("blocks")) {
             throw new IllegalStateException("Missing blocks field");
         }
-        if (includeAddress) {
-            if (addressPayload == null || !addressPayload.has("address")) {
-                throw new IllegalStateException("Missing address field");
-            }
-        }
 
         JSONArray transactions = historyPayload.optJSONArray("transactions");
         if (transactions == null) {
@@ -673,8 +694,9 @@ public class MainActivity extends Activity {
         }
 
         long blockHeight = statusPayload.getLong("blocks");
-        String balance = balancePayload.get("balance").toString();
-        String address = includeAddress ? addressPayload.getString("address") : null;
+        BigDecimal rawBalance = new BigDecimal(balancePayload.get("balance").toString());
+        String balance = formatBob(rawBalance);
+        String address = includeAddress ? walletManager.getReceiveAddress() : null;
 
         ConnectionState connectionState = parseConnectionState(statusPayload);
 
@@ -682,7 +704,7 @@ public class MainActivity extends Activity {
     }
 
     private void renderWalletData(WalletData walletData) {
-        balanceView.setText("Balance: " + walletData.balance + " BOB");
+        balanceView.setText("Balance: " + walletData.balance);
         renderConnectionState(walletData.connectionState);
         if (walletData.address != null) {
             renderAddress(walletData.address);
@@ -692,11 +714,12 @@ public class MainActivity extends Activity {
 
     private void renderAddress(String address) {
         currentAddress = address;
+        String formattedAddress = formatAddressForDisplay(address);
         if (addressView != null) {
-            addressView.setText(address);
+            addressView.setText(formattedAddress);
         }
         if (mainAddressView != null) {
-            mainAddressView.setText(address);
+            mainAddressView.setText(formattedAddress);
         }
         renderQrCode(address);
     }
@@ -757,9 +780,9 @@ public class MainActivity extends Activity {
 
         executor.execute(() -> {
             try {
+                String rawTransaction = createSignedTransaction(address, amount);
                 JSONObject payload = new JSONObject();
-                payload.put("address", address);
-                payload.put("amount", amount.stripTrailingZeros().toPlainString());
+                payload.put("rawTx", rawTransaction);
                 JSONObject response = postJson(SEND_URL, payload);
                 String txid = extractTxid(response);
                 runOnUiThread(() -> renderSendSuccess(txid));
@@ -779,6 +802,73 @@ public class MainActivity extends Activity {
                 });
             }
         });
+    }
+
+    private String createSignedTransaction(String destinationAddress, BigDecimal amount) throws Exception {
+        List<String> trackedAddresses = walletManager.getTrackedAddresses();
+        JSONObject utxoPayload = fetchJson(buildAddressQueryUrl(UTXOS_URL, trackedAddresses));
+        JSONArray utxos = utxoPayload.optJSONArray("utxos");
+        if (utxos == null) {
+            throw new IllegalStateException("Missing UTXO set");
+        }
+
+        List<TransactionSigner.WalletInput> localInputs = new ArrayList<>();
+        for (int i = 0; i < utxos.length(); i++) {
+            JSONObject item = utxos.optJSONObject(i);
+            if (item == null) {
+                continue;
+            }
+            if (!item.optBoolean("spendable", true)) {
+                continue;
+            }
+            String inputAddress = item.optString("address", "");
+            int derivationIndex = findLocalDerivationIndex(inputAddress);
+            if (derivationIndex < 0) {
+                continue;
+            }
+            BigDecimal inputAmount = new BigDecimal(item.optString("amount", "0"));
+            localInputs.add(new TransactionSigner.WalletInput(
+                item.optString("txid", ""),
+                item.optLong("vout", 0),
+                toSatoshis(inputAmount),
+                inputAddress,
+                derivationIndex
+            ));
+        }
+
+        if (localInputs.isEmpty()) {
+            throw new IllegalStateException("No spendable UTXOs found for local wallet addresses");
+        }
+
+        TransactionSigner.TransactionPlan plan = transactionSigner.createTransaction(
+            localInputs,
+            destinationAddress,
+            toSatoshis(amount),
+            toSatoshis(currentFee),
+            walletManager.getReceiveAddress()
+        );
+        transactionSigner.signTransaction(plan);
+        return transactionSigner.serializeTransaction(plan);
+    }
+
+    private int findLocalDerivationIndex(String address) {
+        if (address == null || address.isEmpty()) {
+            return -1;
+        }
+        int maxIndex = Math.max(walletManager.getCurrentReceiveIndex(), 0);
+        for (int index = 0; index <= maxIndex; index++) {
+            if (address.equals(walletManager.getAddressForIndex(index))) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private long toSatoshis(BigDecimal value) {
+        return value
+            .multiply(new BigDecimal("100000000"))
+            .setScale(0, RoundingMode.HALF_UP)
+            .longValueExact();
     }
 
     private void renderSendSuccess(String txid) {
@@ -974,7 +1064,31 @@ public class MainActivity extends Activity {
             return;
         }
         clipboard.setPrimaryClip(ClipData.newPlainText("Dobbscoin address", currentAddress));
-        Toast.makeText(this, "Address copied.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Address copied", Toast.LENGTH_SHORT).show();
+    }
+
+    private void styleReceiveAddressView(TextView view) {
+        view.setTypeface(Typeface.MONOSPACE);
+        view.setTextIsSelectable(false);
+        view.setClickable(true);
+        view.setFocusable(true);
+        view.setGravity(Gravity.CENTER_HORIZONTAL);
+        view.setOnClickListener(v -> copyAddressToClipboard());
+    }
+
+    private String formatAddressForDisplay(String address) {
+        if (address == null || address.isEmpty()) {
+            return address;
+        }
+        StringBuilder builder = new StringBuilder();
+        int groupSize = 7;
+        for (int index = 0; index < address.length(); index++) {
+            if (index > 0 && index % groupSize == 0) {
+                builder.append(' ');
+            }
+            builder.append(address.charAt(index));
+        }
+        return builder.toString();
     }
 
     private void renderQrCode(String address) {
@@ -1026,6 +1140,8 @@ public class MainActivity extends Activity {
         connection.setConnectTimeout(10000);
         connection.setReadTimeout(10000);
         connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("X-Wallet-ID", walletId);
+        Log.i(TAG, "API request wallet_id=" + walletId + " method=GET url=" + url);
 
         try {
             int responseCode = connection.getResponseCode();
@@ -1043,6 +1159,20 @@ public class MainActivity extends Activity {
         }
     }
 
+    private String buildAddressQueryUrl(String baseUrl, List<String> addresses) {
+        if (addresses == null || addresses.isEmpty()) {
+            return baseUrl;
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < addresses.size(); i++) {
+            if (i > 0) {
+                builder.append(',');
+            }
+            builder.append(addresses.get(i));
+        }
+        return baseUrl + "?addresses=" + URLEncoder.encode(builder.toString(), StandardCharsets.UTF_8);
+    }
+
     private JSONObject postJson(String url, JSONObject payload) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setRequestMethod("POST");
@@ -1050,7 +1180,9 @@ public class MainActivity extends Activity {
         connection.setReadTimeout(10000);
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+        connection.setRequestProperty("X-Wallet-ID", walletId);
         connection.setDoOutput(true);
+        Log.i(TAG, "API request wallet_id=" + walletId + " method=POST url=" + url);
 
         try {
             byte[] bodyBytes = payload.toString().getBytes(StandardCharsets.UTF_8);
@@ -1241,13 +1373,6 @@ public class MainActivity extends Activity {
         ));
     }
 
-    private String appendBob(String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
-        return value + " BOB";
-    }
-
     private BigDecimal parseAmount(String rawValue) {
         if (rawValue == null || rawValue.trim().isEmpty()) {
             return null;
@@ -1259,8 +1384,18 @@ public class MainActivity extends Activity {
         }
     }
 
-    private String formatBob(BigDecimal value) {
-        return value.setScale(8, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + " BOB";
+    private static String formatBob(BigDecimal value) {
+        return formatBobValue(value) + " BOB";
+    }
+
+    private static String formatBobValue(BigDecimal value) {
+        if (value == null) {
+            return "0.00000000";
+        }
+        if (value.abs().compareTo(MIN_DISPLAY_BOB) < 0) {
+            return BigDecimal.ZERO.setScale(8, RoundingMode.DOWN).toPlainString();
+        }
+        return value.setScale(8, RoundingMode.DOWN).toPlainString();
     }
 
     private BigDecimal parseEstimatedFee(JSONObject payload) {
@@ -1282,7 +1417,7 @@ public class MainActivity extends Activity {
         return DEFAULT_FEE.min(FALLBACK_FEE_RATE).max(DEFAULT_FEE);
     }
 
-    private BigDecimal parseBigDecimal(String rawValue) {
+    private static BigDecimal parseBigDecimal(String rawValue) {
         if (rawValue == null || rawValue.isEmpty()) {
             return null;
         }
@@ -1416,8 +1551,8 @@ public class MainActivity extends Activity {
             String txid = opt(item, "txid");
             long time = parseLong(opt(item, "time"), Long.MIN_VALUE + fallbackIndex);
             String date = formatTimeValue(opt(item, "time"));
-            String amountValue = opt(item, "amount");
-            String amount = amountValue == null ? "Unavailable" : amountValue + " BOB";
+            BigDecimal amountValue = parseBigDecimal(opt(item, "amount"));
+            String amount = amountValue == null ? "Unavailable" : formatBob(amountValue);
             String confirmations = fallback(opt(item, "confirmations"));
             String address = fallback(item.optString("address", null));
 

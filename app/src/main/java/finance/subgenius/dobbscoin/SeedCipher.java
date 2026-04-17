@@ -3,6 +3,7 @@ package finance.subgenius.dobbscoin;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
+import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
@@ -13,6 +14,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
 final class SeedCipher {
+    private static final String TAG = "SeedCipher";
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     private static final String KEY_ALIAS = "dobbscoin_wallet_seed_key";
     private static final String TRANSFORMATION = "AES/GCM/NoPadding";
@@ -22,6 +24,7 @@ final class SeedCipher {
 
     static EncryptedPayload encrypt(String plaintext) {
         try {
+            Log.i(TAG, "Encrypting wallet seed");
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey());
             byte[] encrypted = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
@@ -36,6 +39,7 @@ final class SeedCipher {
 
     static String decrypt(EncryptedPayload payload) {
         try {
+            Log.i(TAG, "Decrypting wallet seed");
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             GCMParameterSpec spec = new GCMParameterSpec(128, Base64.decode(payload.ivBase64, Base64.NO_WRAP));
             cipher.init(Cipher.DECRYPT_MODE, getOrCreateKey(), spec);
@@ -47,10 +51,12 @@ final class SeedCipher {
     }
 
     private static SecretKey getOrCreateKey() throws Exception {
+        Log.i(TAG, "Initializing Android Keystore seed key");
         KeyStore keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
         keyStore.load(null);
         KeyStore.Entry existingEntry = keyStore.getEntry(KEY_ALIAS, null);
         if (existingEntry instanceof KeyStore.SecretKeyEntry) {
+            Log.i(TAG, "Reusing existing keystore seed key");
             return ((KeyStore.SecretKeyEntry) existingEntry).getSecretKey();
         }
 
@@ -64,6 +70,7 @@ final class SeedCipher {
             .setKeySize(256)
             .build();
         keyGenerator.init(spec);
+        Log.i(TAG, "Created new keystore seed key");
         return keyGenerator.generateKey();
     }
 

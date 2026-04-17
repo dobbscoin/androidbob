@@ -148,18 +148,36 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        walletId = WalletIdentityStore.getOrCreateWalletId(this);
-        Log.i(TAG, "Startup wallet_id=" + walletId);
-        walletManager = new WalletManager(this);
-        walletManager.ensureWallet();
-        transactionSigner = new TransactionSigner(walletManager);
+        try {
+            try {
+                walletId = WalletIdentityStore.getOrCreateWalletId(this);
+                Log.i(TAG, "Startup wallet_id=" + walletId);
+            } catch (Exception e) {
+                Log.e(TAG, "Wallet identity initialization failed", e);
+                walletId = "";
+            }
+            walletManager = new WalletManager(this);
+            try {
+                WalletManager.LoadedWallet wallet = walletManager.loadOrCreateWallet();
+                if (wallet == null) {
+                    throw new IllegalStateException("Wallet initialization failed");
+                }
+                transactionSigner = new TransactionSigner(walletManager);
+            } catch (Exception e) {
+                Log.e(TAG, "Fatal wallet init error", e);
+                transactionSigner = new TransactionSigner(walletManager);
+            }
 
-        setContentView(buildContentView());
-        renderConnectionState(ConnectionState.SYNCING);
-        showTab(TAB_MAIN);
-        if (!maybeRequireSecurity(false)) {
-            loadWalletData(true);
-            initialWalletLoadCompleted = true;
+            setContentView(buildContentView());
+            renderConnectionState(ConnectionState.SYNCING);
+            showTab(TAB_MAIN);
+            if (!maybeRequireSecurity(false)) {
+                loadWalletData(true);
+                initialWalletLoadCompleted = true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "MainActivity startup failed", e);
+            showFallbackStartupUi();
         }
     }
 
@@ -548,23 +566,29 @@ public class MainActivity extends Activity {
             return true;
         }
 
-        if (!SecurityStore.isPinConfigured(this)) {
-            Intent intent = new Intent(this, SecurityActivity.class);
-            intent.putExtra(SecurityActivity.EXTRA_MODE, SecurityActivity.MODE_SETUP);
-            securityPromptActive = true;
-            startActivityForResult(intent, REQUEST_APP_UNLOCK);
-            return true;
-        }
+        try {
+            if (!SecurityStore.isPinConfigured(this)) {
+                Intent intent = new Intent(this, SecurityActivity.class);
+                intent.putExtra(SecurityActivity.EXTRA_MODE, SecurityActivity.MODE_SETUP);
+                securityPromptActive = true;
+                startActivityForResult(intent, REQUEST_APP_UNLOCK);
+                return true;
+            }
 
-        if (forSend || SecurityStore.shouldRequireUnlock(this)) {
-            Intent intent = new Intent(this, SecurityActivity.class);
-            intent.putExtra(
-                SecurityActivity.EXTRA_MODE,
-                forSend ? SecurityActivity.MODE_SEND_AUTH : SecurityActivity.MODE_UNLOCK
-            );
-            securityPromptActive = true;
-            startActivityForResult(intent, forSend ? REQUEST_SEND_AUTH : REQUEST_APP_UNLOCK);
-            return true;
+            if (forSend || SecurityStore.shouldRequireUnlock(this)) {
+                Intent intent = new Intent(this, SecurityActivity.class);
+                intent.putExtra(
+                    SecurityActivity.EXTRA_MODE,
+                    forSend ? SecurityActivity.MODE_SEND_AUTH : SecurityActivity.MODE_UNLOCK
+                );
+                securityPromptActive = true;
+                startActivityForResult(intent, forSend ? REQUEST_SEND_AUTH : REQUEST_APP_UNLOCK);
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Security prompt initialization failed", e);
+            Toast.makeText(this, "Security initialization failed. Continuing unlocked.", Toast.LENGTH_LONG).show();
+            securityPromptActive = false;
         }
 
         return false;
@@ -953,7 +977,8 @@ public class MainActivity extends Activity {
                 autoRefreshEnabled = true;
                 scheduleNextAutoRefresh(AUTO_REFRESH_INTERVAL_MS);
             } else {
-                finish();
+                Log.w(TAG, "Unlock flow canceled, keeping app open");
+                Toast.makeText(this, "Wallet remains locked.", Toast.LENGTH_SHORT).show();
             }
             return;
         }
@@ -1065,6 +1090,33 @@ public class MainActivity extends Activity {
         }
         clipboard.setPrimaryClip(ClipData.newPlainText("Dobbscoin address", currentAddress));
         Toast.makeText(this, "Address copied", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showFallbackStartupUi() {
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.parseColor("#F3EFE7"));
+        root.setGravity(Gravity.CENTER);
+        int padding = dp(24);
+        root.setPadding(padding, padding, padding, padding);
+
+        TextView title = new TextView(this);
+        title.setText("Dobbscoin Wallet");
+        title.setTextColor(Color.parseColor("#1F2933"));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.addView(title, matchWrapParams());
+
+        TextView message = new TextView(this);
+        message.setText("Startup failed. Check crash.log and try reopening the wallet.");
+        message.setTextColor(Color.parseColor("#52606D"));
+        message.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        message.setGravity(Gravity.CENTER_HORIZONTAL);
+        LinearLayout.LayoutParams messageParams = matchWrapParams();
+        messageParams.topMargin = dp(12);
+        root.addView(message, messageParams);
+
+        setContentView(root);
     }
 
     private void styleReceiveAddressView(TextView view) {

@@ -3,6 +3,7 @@ package finance.subgenius.dobbscoin;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.biometric.BiometricManager;
 import androidx.security.crypto.EncryptedSharedPreferences;
@@ -12,9 +13,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 public final class SecurityStore {
+    private static final String TAG = "SecurityStore";
     public static final long BACKGROUND_LOCK_TIMEOUT_MS = 30_000L;
 
     private static final String PREFS_NAME = "wallet_security";
+    private static final String FALLBACK_PREFS_NAME = "wallet_security_fallback";
     private static final String KEY_PIN_HASH = "pin_hash";
 
     private static boolean unlockedThisSession;
@@ -77,8 +80,13 @@ public final class SecurityStore {
     }
 
     public static boolean isBiometricAvailable(Context context) {
-        int result = BiometricManager.from(context).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
-        return result == BiometricManager.BIOMETRIC_SUCCESS;
+        try {
+            int result = BiometricManager.from(context).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
+            return result == BiometricManager.BIOMETRIC_SUCCESS;
+        } catch (Exception e) {
+            Log.e(TAG, "Biometric availability check failed", e);
+            return false;
+        }
     }
 
     private static SharedPreferences prefs(Context context) {
@@ -94,7 +102,8 @@ public final class SecurityStore {
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to initialize secure storage", e);
+            Log.e(TAG, "Unable to initialize encrypted security storage, using fallback prefs", e);
+            return context.getSharedPreferences(FALLBACK_PREFS_NAME, Context.MODE_PRIVATE);
         }
     }
 

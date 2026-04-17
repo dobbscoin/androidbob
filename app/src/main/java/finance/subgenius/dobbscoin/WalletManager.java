@@ -2,6 +2,7 @@ package finance.subgenius.dobbscoin;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.LegacyAddress;
@@ -16,8 +17,10 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.File;
 
 public final class WalletManager {
+    private static final String TAG = "WalletManager";
     private static final String PREFS_NAME = "wallet_deterministic";
     private static final String KEY_SEED_IV = "seed_iv";
     private static final String KEY_SEED_CIPHERTEXT = "seed_ciphertext";
@@ -44,11 +47,44 @@ public final class WalletManager {
     }
 
     public String ensureWallet() {
-        if (hasSeed()) {
-            return getReceiveAddress();
+        return loadOrCreateWallet().receiveAddress;
+    }
+
+    public LoadedWallet loadOrCreateWallet() {
+        initializeStorage();
+        Log.i(TAG, "Wallet load attempt");
+        try {
+            LoadedWallet wallet = loadWallet();
+            if (wallet == null) {
+                Log.w(TAG, "Wallet not found, creating new wallet");
+                wallet = createNewWallet();
+            }
+            if (wallet == null) {
+                throw new IllegalStateException("Wallet creation returned null");
+            }
+            return wallet;
+        } catch (Exception e) {
+            Log.e(TAG, "Wallet load failed, creating fallback wallet", e);
+            LoadedWallet fallbackWallet = createNewWallet();
+            if (fallbackWallet == null) {
+                throw new IllegalStateException("Wallet initialization failed", e);
+            }
+            return fallbackWallet;
         }
-        generateSeed();
-        return getReceiveAddress();
+    }
+
+    public LoadedWallet loadOrCreateWallet(Context context) {
+        Log.i(TAG, "loadOrCreateWallet called with context");
+        return new WalletManager(context).loadOrCreateWallet();
+    }
+
+    public LoadedWallet createNewWallet() {
+        Log.i(TAG, "Creating new wallet");
+        String mnemonic = generateSeed();
+        WalletIdentityStore.getOrCreateWalletId(appContext);
+        LoadedWallet wallet = loadWallet();
+        Log.i(TAG, "Wallet created");
+        return wallet;
     }
 
     public String generateSeed() {
@@ -57,6 +93,7 @@ public final class WalletManager {
             new SecureRandom().nextBytes(entropy);
             List<String> words = MnemonicCode.INSTANCE.toMnemonic(entropy);
             String mnemonic = joinWords(words);
+            Log.i(TAG, "Seed generated");
             storeSeed(mnemonic);
             prefs().edit()
                 .putInt(KEY_RECEIVE_INDEX, 0)
@@ -69,6 +106,9 @@ public final class WalletManager {
     }
 
     public LoadedWallet loadWallet() {
+        if (!hasSeed()) {
+            return null;
+        }
         String mnemonic = exportSeed();
         int receiveIndex = prefs().getInt(KEY_RECEIVE_INDEX, 0);
         return new LoadedWallet(mnemonic, receiveIndex, deriveAddress(receiveIndex));
@@ -183,7 +223,20 @@ public final class WalletManager {
     }
 
     private SharedPreferences prefs() {
+        Log.i(TAG, "Database initialization (SharedPreferences) for " + PREFS_NAME);
         return appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    private void initializeStorage() {
+        File filesDir = appContext.getFilesDir();
+        if (filesDir != null && !filesDir.exists()) {
+            filesDir.mkdirs();
+        }
+        File walletDir = new File(filesDir, "wallet");
+        if (!walletDir.exists()) {
+            walletDir.mkdirs();
+        }
+        Log.i(TAG, "Storage initialized at " + walletDir.getAbsolutePath());
     }
 
     private void ensureSeedExists() {

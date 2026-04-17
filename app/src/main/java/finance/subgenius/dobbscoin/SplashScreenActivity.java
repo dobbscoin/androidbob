@@ -17,7 +17,6 @@ public class SplashScreenActivity extends Activity {
     private static final long LOADING_ANIMATION_INTERVAL_MS = 500L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final Runnable launchWalletRunnable = this::launchWallet;
     private final Runnable loadingAnimationRunnable = new Runnable() {
         @Override
         public void run() {
@@ -40,27 +39,44 @@ public class SplashScreenActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        String walletId = WalletIdentityStore.getOrCreateWalletId(this);
-        Log.i(TAG, "Startup wallet_id=" + walletId);
-        setContentView(R.layout.activity_splash);
-        loadingTextView = findViewById(R.id.splashLoadingText);
-        Button splashMinistryButton = findViewById(R.id.splashMinistryButton);
-        splashMinistryButton.setOnClickListener(v -> {
-            Intent browserIntent = new Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("https://www.subgenius.com/scatalog/membership.htm")
+
+        try {
+
+            Log.i("Splash", "Splash starting");
+
+            setContentView(
+                R.layout.activity_splash
             );
-            startActivity(browserIntent);
-        });
-        handler.post(loadingAnimationRunnable);
-        long transitionDelay = startThemeMusicAndGetDelay();
-        handler.postDelayed(launchWalletRunnable, transitionDelay);
+
+            loadingTextView = findViewById(R.id.splashLoadingText);
+            Button splashMinistryButton = findViewById(R.id.splashMinistryButton);
+            splashMinistryButton.setOnClickListener(v -> {
+                Intent browserIntent = new Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://www.subgenius.com/scatalog/membership.htm")
+                );
+                startActivity(browserIntent);
+            });
+            handler.post(loadingAnimationRunnable);
+            startThemeMusicAndGetDelay();
+            initializeApp();
+
+        }
+        catch (Exception e) {
+
+            Log.e(
+                "Splash",
+                "Fatal splash error",
+                e
+            );
+
+            launchMain();
+        }
     }
 
     @Override
     protected void onDestroy() {
         handler.removeCallbacks(loadingAnimationRunnable);
-        handler.removeCallbacks(launchWalletRunnable);
         if (!launched) {
             stopThemeMusic();
         }
@@ -95,22 +111,68 @@ public class SplashScreenActivity extends Activity {
         splashPlayer = null;
     }
 
-    private void launchWallet() {
+    private void initializeApp() {
+        new Thread(() -> {
+            try {
+                Log.i(
+                    "Splash",
+                    "Initializing wallet"
+                );
+
+                WalletManager manager =
+                    new WalletManager(
+                        getApplicationContext()
+                    );
+
+                manager.loadOrCreateWallet(
+                    getApplicationContext()
+                );
+
+                Log.i(
+                    "Splash",
+                    "Wallet ready"
+                );
+            } catch (Exception e) {
+                Log.e(
+                    "Splash",
+                    "Initialization failed",
+                    e
+                );
+            }
+
+            runOnUiThread(
+                this::launchMain
+            );
+        }).start();
+    }
+
+    private void launchMain() {
         if (launched || isFinishing()) {
             return;
         }
-        launched = true;
-        Intent intent;
-        if (SecurityStore.shouldShowSecurityOnStartup(this)) {
-            intent = new Intent(this, SecurityActivity.class);
-            intent.putExtra(SecurityActivity.EXTRA_MODE,
-                SecurityStore.isPinConfigured(this) ? SecurityActivity.MODE_UNLOCK : SecurityActivity.MODE_SETUP);
-            intent.putExtra(SecurityActivity.EXTRA_LAUNCH_MAIN, true);
-        } else {
-            intent = new Intent(this, MainActivity.class);
+
+        try {
+            stopThemeMusic();
+            Intent intent =
+                new Intent(
+                    SplashScreenActivity.this,
+                    MainActivity.class
+                );
+            startActivity(intent);
+            launched = true;
+            finish();
+
         }
-        startActivity(intent);
-        finish();
+        catch (Exception e) {
+            Log.e(
+                "Splash",
+                "Failed to start MainActivity",
+                e
+            );
+            if (loadingTextView != null) {
+                loadingTextView.setText("Startup failed. Check crash.log.");
+            }
+        }
     }
 
     private String buildLoadingText(int dotCount) {

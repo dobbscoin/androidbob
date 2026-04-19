@@ -23,6 +23,23 @@
         android:layout_height="match_parent"
         android:background="#55000000" />
 
+    <!-- Tagline — centered in the space above the splash image -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="28dp"
+        android:gravity="center"
+        android:text="Where Culture becomes Capital"
+        android:textColor="#33FF33"
+        android:textStyle="bold"
+        android:textSize="17sp"
+        android:letterSpacing="0.05"
+        android:shadowColor="#000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="6" />
+
     <!-- LOADING block — floats in the vertical center -->
     <LinearLayout
         android:layout_width="match_parent"

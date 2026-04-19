@@ -112,6 +112,14 @@ public class WalletApplication extends Application
 
 		CrashReporter.init(getCacheDir());
 
+		// Log any crash trace from the previous run to the debug file immediately.
+		if (CrashReporter.hasSavedCrashTrace())
+		{
+			final StringBuilder trace = new StringBuilder();
+			try { CrashReporter.appendSavedCrashTrace(trace); } catch (final java.io.IOException ignored) {}
+			writeDebugLog("CRASH TRACE FROM PREVIOUS RUN:\n" + trace.toString());
+		}
+
 		Threading.uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler()
 		{
 			@Override
@@ -379,7 +387,7 @@ public class WalletApplication extends Application
 	}
 
 	/** Append a timestamped line to Downloads/dobbscoin_debug.txt for field diagnosis. */
-	private void writeDebugLog(final String msg)
+	public void writeDebugLog(final String msg)
 	{
 		try
 		{

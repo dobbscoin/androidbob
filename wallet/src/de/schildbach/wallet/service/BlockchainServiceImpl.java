@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.media.MediaPlayer;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -215,6 +216,29 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		notification.setWhen(System.currentTimeMillis());
 		notification.setSound(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.coins_received));
 		nm.notify(NOTIFICATION_ID_COINS_RECEIVED, notification.getNotification());
+
+		// Play the custom receive sound directly so it fires whether the app is
+		// in the foreground or background (notification channel sound is unreliable on API 26+).
+		try
+		{
+			final MediaPlayer mp = MediaPlayer.create(BlockchainServiceImpl.this, R.raw.receive);
+			if (mp != null)
+			{
+				mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener()
+				{
+					@Override
+					public void onCompletion(final MediaPlayer player)
+					{
+						player.release();
+					}
+				});
+				mp.start();
+			}
+		}
+		catch (final Exception x)
+		{
+			log.warn("could not play receive sound", x);
+		}
 	}
 
 	private final class PeerConnectivityListener extends AbstractPeerEventListener implements OnSharedPreferenceChangeListener
@@ -630,6 +654,8 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 
 		super.onCreate();
 
+		((WalletApplication) getApplication()).writeDebugLog("S1:BlockchainService.onCreate start");
+
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 		final String lockName = getPackageName() + " blockchain sync";
@@ -755,6 +781,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 			}
 		}
 
+		application.writeDebugLog("S2:creating BlockChain");
 		try
 		{
 			blockChain = new BlockChain(Constants.NETWORK_PARAMETERS, wallet, blockStore);
@@ -763,6 +790,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		{
 			throw new Error("blockchain cannot be created", x);
 		}
+		application.writeDebugLog("S3:BlockChain created, registering receivers");
 
 		final IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -774,6 +802,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		application.getWallet().addEventListener(walletEventListener, Threading.SAME_THREAD);
 
 		registerReceiver(tickReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+		application.writeDebugLog("S4:BlockchainService.onCreate complete");
 	}
 
 	@Override
@@ -806,7 +835,11 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 				final Sha256Hash hash = Sha256Hash.wrap(intent.getByteArrayExtra(BlockchainService.ACTION_BROADCAST_TRANSACTION_HASH));
 				final Transaction tx = application.getWallet().getTransaction(hash);
 
-				if (peerGroup != null)
+				if (tx == null)
+				{
+					log.warn("broadcast requested but transaction not found in wallet: " + hash);
+				}
+				else if (peerGroup != null)
 				{
 					log.info("broadcasting transaction " + tx.getHashAsString());
 					peerGroup.broadcastTransaction(tx);

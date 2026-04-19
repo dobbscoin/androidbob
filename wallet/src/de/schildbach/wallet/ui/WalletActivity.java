@@ -37,6 +37,8 @@ import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.VersionedChecksummedBytes;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.core.Wallet.BalanceType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -90,6 +92,8 @@ import subgeneius.dobbs.wallet.R;
  */
 public final class WalletActivity extends AbstractWalletActivity
 {
+	private static final Logger log = LoggerFactory.getLogger(WalletActivity.class);
+
 	private static final int DIALOG_RESTORE_WALLET = 0;
 	private static final int DIALOG_TIMESKEW_ALERT = 1;
 	private static final int DIALOG_VERSION_ALERT = 2;
@@ -109,24 +113,37 @@ public final class WalletActivity extends AbstractWalletActivity
 		super.onCreate(savedInstanceState);
 
 		application = getWalletApplication();
+		application.writeDebugLog("A1:WalletActivity.onCreate savedState=" + (savedInstanceState != null));
 		config = application.getConfiguration();
 		wallet = application.getWallet();
+		application.writeDebugLog("A3:got wallet txCount=" + wallet.getTransactions(true).size());
 
 		setContentView(R.layout.wallet_content);
+		application.writeDebugLog("A4:setContentView done");
 
 		if (savedInstanceState == null)
+		{
+			application.writeDebugLog("A5:calling checkCrashTrace");
+			checkCrashTrace();
+			application.writeDebugLog("A6:calling checkAlerts");
 			checkAlerts();
+			application.writeDebugLog("A7:checkAlerts done");
+		}
 
 		config.touchLastUsed();
+		application.writeDebugLog("A8:touchLastUsed done");
 
 		handleIntent(getIntent());
+		application.writeDebugLog("A9:handleIntent done");
 
 		MaybeMaintenanceFragment.add(getFragmentManager());
+		application.writeDebugLog("A10:onCreate complete");
 	}
 
 	@Override
 	protected void onResume()
 	{
+		application.writeDebugLog("A11:onResume start");
 		super.onResume();
 
 		handler.postDelayed(new Runnable()
@@ -135,11 +152,14 @@ public final class WalletActivity extends AbstractWalletActivity
 			public void run()
 			{
 				// delayed start so that UI has enough time to initialize
+				application.writeDebugLog("A12:startBlockchainService (delayed)");
 				getWalletApplication().startBlockchainService(true);
+				application.writeDebugLog("A13:startBlockchainService returned");
 			}
 		}, 1000);
 
 		checkLowStorageAlert();
+		application.writeDebugLog("A14:onResume complete");
 	}
 
 	@Override
@@ -512,6 +532,23 @@ public final class WalletActivity extends AbstractWalletActivity
 		});
 		dialog.setNegativeButton(R.string.button_dismiss, null);
 		return dialog.create();
+	}
+
+	private void checkCrashTrace()
+	{
+		if (CrashReporter.hasSavedCrashTrace())
+		{
+			final StringBuilder stackTrace = new StringBuilder();
+			try
+			{
+				CrashReporter.appendSavedCrashTrace(stackTrace);
+			}
+			catch (final IOException x)
+			{
+				log.info("problem reading crash trace", x);
+			}
+			log.warn("CRASH TRACE FROM PREVIOUS RUN:\n" + stackTrace);
+		}
 	}
 
 	private void checkAlerts()

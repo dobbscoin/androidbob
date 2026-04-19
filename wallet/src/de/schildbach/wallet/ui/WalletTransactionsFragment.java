@@ -373,9 +373,12 @@ public class WalletTransactionsFragment extends Fragment implements LoaderCallba
 	@Override
 	public void onLoadFinished(final Loader<List<Transaction>> loader, final List<Transaction> transactions)
 	{
+		application.writeDebugLog("T1:onLoadFinished txCount=" + transactions.size());
 		final Direction direction = ((TransactionsLoader) loader).getDirection();
 
+		application.writeDebugLog("T2:adapter.replace start");
 		adapter.replace(transactions);
+		application.writeDebugLog("T3:adapter.replace done");
 
 		if (transactions.isEmpty())
 		{
@@ -419,7 +422,9 @@ public class WalletTransactionsFragment extends Fragment implements LoaderCallba
 		}
 		else
 		{
+			application.writeDebugLog("T4:setDisplayedChild(2) for txList");
 			viewGroup.setDisplayedChild(2);
+			application.writeDebugLog("T5:onLoadFinished complete");
 		}
 	}
 

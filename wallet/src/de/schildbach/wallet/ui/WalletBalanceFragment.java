@@ -229,6 +229,8 @@ public final class WalletBalanceFragment extends Fragment
 		if (!isAdded())
 			return;
 
+		application.writeDebugLog("B1:WalletBalanceFragment.updateView balance=" + balance);
+
 		final boolean showProgress;
 
 		if (blockchainState != null && blockchainState.bestChainDate != null)
@@ -277,6 +279,7 @@ public final class WalletBalanceFragment extends Fragment
 
 			if (balance != null)
 			{
+				application.writeDebugLog("B2:balance display start amt=" + balance.toPlainString());
 				final org.bitcoinj.utils.MonetaryFormat fmt = config.getFormat();
 				final String code = fmt.format(Coin.COIN).toString()
 						.split("[0-9]")[0]
@@ -285,20 +288,25 @@ public final class WalletBalanceFragment extends Fragment
 				viewBalanceBOB.setVisibility(View.VISIBLE);
 				viewBalanceBOB.setFormat(fmt.noCode());
 				viewBalanceBOB.setAmount(balance);
-				viewBalanceCode.setText(code);
+				viewBalanceCode.setText("(" + code + ") Dobbscoin");
 				viewBalanceCode.setVisibility(View.VISIBLE);
+				application.writeDebugLog("B3:balance views set code=" + code);
 
 				final boolean tooMuch = balance.isGreaterThan(TOO_MUCH_BALANCE_THRESHOLD);
 
 				viewBalanceTooMuch.setVisibility(tooMuch ? View.VISIBLE : View.GONE);
+				application.writeDebugLog("B4:before enableSm");
 				enableSm();
+				application.writeDebugLog("B5:after enableSm showLocalBalance=" + showLocalBalance);
 				if (showLocalBalance)
 				{
 					if (exchangeRate != null)
 					{
+						application.writeDebugLog("B6:coinToFiat currency=" + exchangeRate.getCurrencyCode());
 						// Note: BTC conversion (coinToBTC) was a custom feature not available in standard dobbscoinj
 						// Falling back to fiat display only
 						final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
+						application.writeDebugLog("B7:fiat=" + localValue);
 						viewBalanceLocal.setVisibility(View.VISIBLE);
 						viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0, Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
 						viewBalanceLocal.setAmount(localValue);
@@ -324,6 +332,7 @@ public final class WalletBalanceFragment extends Fragment
 			viewProgress.setVisibility(View.VISIBLE);
 			viewBalance.setVisibility(View.INVISIBLE);
 		}
+		application.writeDebugLog("B8:updateView complete");
 	}
 
 	private final LoaderCallbacks<BlockchainState> blockchainStateLoaderCallbacks = new LoaderManager.LoaderCallbacks<BlockchainState>()

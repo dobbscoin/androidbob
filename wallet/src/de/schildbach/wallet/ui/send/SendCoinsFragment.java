@@ -315,8 +315,12 @@ public final class SendCoinsFragment extends Fragment
 						final int soundResId = getResources().getIdentifier("send_coins_broadcast_" + numBroadcastPeers, "raw",
 								activity.getPackageName());
 						if (soundResId > 0)
-							RingtoneManager.getRingtone(activity, Uri.parse("android.resource://" + activity.getPackageName() + "/" + soundResId))
-									.play();
+						{
+							final android.media.Ringtone ringtone = RingtoneManager.getRingtone(activity,
+									Uri.parse("android.resource://" + activity.getPackageName() + "/" + soundResId));
+							if (ringtone != null)
+								ringtone.play();
+						}
 					}
 
 					updateView();
@@ -685,7 +689,8 @@ public final class SendCoinsFragment extends Fragment
 		if (savedInstanceState.containsKey("sent_transaction_hash"))
 		{
 			sentTransaction = wallet.getTransaction((Sha256Hash) savedInstanceState.getSerializable("sent_transaction_hash"));
-			sentTransaction.getConfidence().addEventListener(sentTransactionConfidenceListener);
+			if (sentTransaction != null)
+				sentTransaction.getConfidence().addEventListener(sentTransactionConfidenceListener);
 		}
 		if (savedInstanceState.containsKey("direct_payment_ack"))
 			directPaymentAck = savedInstanceState.getBoolean("direct_payment_ack");

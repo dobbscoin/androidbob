@@ -4,10 +4,10 @@
 	<string name="toast_wallet_reset">Your wallet was reset!\nIt will take some time to recover.</string>
 	<string name="wallet_disclaimer_fragment_remind_safety">Use at your own risk. Read the &lt;u&gt;safety notes&lt;/u&gt;.</string>
 	<string name="wallet_disclaimer_fragment_remind_backup">You need to &lt;u&gt;back up your wallet&lt;/u&gt;!</string>
-	<string name="blockchain_state_progress_hours">%1$s, %2$d hours behind</string>
-	<string name="blockchain_state_progress_days">%1$s, %2$d days behind</string>
-	<string name="blockchain_state_progress_weeks">%1$s, %2$d weeks behind</string>
-	<string name="blockchain_state_progress_months">%1$s, %2$d months behind</string>
+	<string name="blockchain_state_progress_hours">%1$s\n%2$d hours behind</string>
+	<string name="blockchain_state_progress_days">%1$s\n%2$d days behind</string>
+	<string name="blockchain_state_progress_weeks">%1$s\n%2$d weeks behind</string>
+	<string name="blockchain_state_progress_months">%1$s\n%2$d months behind</string>
 	<string name="blockchain_state_progress_downloading">Synchronizing with network</string>
 	<string name="blockchain_state_progress_stalled">Synchronization stalled</string>
 	<string name="blockchain_state_progress_problem_storage">Synchronizing: Storage problem</string>

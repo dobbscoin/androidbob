@@ -53,24 +53,26 @@ public final class WalletManager {
     public LoadedWallet loadOrCreateWallet() {
         initializeStorage();
         Log.i(TAG, "Wallet load attempt");
+        boolean seedExists = hasSeed();
         try {
             LoadedWallet wallet = loadWallet();
-            if (wallet == null) {
-                Log.w(TAG, "Wallet not found, creating new wallet");
-                wallet = createNewWallet();
+            if (wallet != null) {
+                return wallet;
             }
-            if (wallet == null) {
-                throw new IllegalStateException("Wallet creation returned null");
-            }
-            return wallet;
         } catch (Exception e) {
-            Log.e(TAG, "Wallet load failed, creating fallback wallet", e);
-            LoadedWallet fallbackWallet = createNewWallet();
-            if (fallbackWallet == null) {
-                throw new IllegalStateException("Wallet initialization failed", e);
+            if (seedExists) {
+                Log.e(TAG, "Wallet load failed for existing wallet", e);
+                throw new IllegalStateException("Existing wallet could not be opened", e);
             }
-            return fallbackWallet;
+            Log.w(TAG, "Wallet load failed before any seed existed, creating new wallet", e);
         }
+
+        Log.w(TAG, "Wallet not found, creating new wallet");
+        LoadedWallet wallet = createNewWallet();
+        if (wallet == null) {
+            throw new IllegalStateException("Wallet creation returned null");
+        }
+        return wallet;
     }
 
     public LoadedWallet loadOrCreateWallet(Context context) {
@@ -94,11 +96,7 @@ public final class WalletManager {
             List<String> words = MnemonicCode.INSTANCE.toMnemonic(entropy);
             String mnemonic = joinWords(words);
             Log.i(TAG, "Seed generated");
-            storeSeed(mnemonic);
-            prefs().edit()
-                .putInt(KEY_RECEIVE_INDEX, 0)
-                .putInt(KEY_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION)
-                .apply();
+            storeSeed(mnemonic, 0, CURRENT_SCHEMA_VERSION);
             return mnemonic;
         } catch (Exception e) {
             throw new IllegalStateException("Unable to generate BIP39 seed", e);
@@ -131,7 +129,7 @@ public final class WalletManager {
     public String getNextAddress() {
         ensureSeedExists();
         int nextIndex = prefs().getInt(KEY_RECEIVE_INDEX, 0) + 1;
-        prefs().edit().putInt(KEY_RECEIVE_INDEX, nextIndex).apply();
+        commitOrThrow(prefs().edit().putInt(KEY_RECEIVE_INDEX, nextIndex), "Unable to persist next receive index");
         return deriveAddress(nextIndex);
     }
 
@@ -199,21 +197,22 @@ public final class WalletManager {
             || backup.seedCiphertextBase64 == null || backup.seedCiphertextBase64.isEmpty()) {
             throw new IllegalArgumentException("Backup payload is incomplete");
         }
-        prefs().edit()
+        commitOrThrow(prefs().edit()
             .putString(KEY_SEED_IV, backup.seedIvBase64)
             .putString(KEY_SEED_CIPHERTEXT, backup.seedCiphertextBase64)
             .putInt(KEY_RECEIVE_INDEX, Math.max(0, backup.receiveIndex))
             .putInt(KEY_SCHEMA_VERSION, Math.max(1, backup.schemaVersion))
-            .apply();
+            , "Unable to restore wallet backup");
     }
 
-    private void storeSeed(String mnemonic) {
+    private void storeSeed(String mnemonic, int receiveIndex, int schemaVersion) {
         SeedCipher.EncryptedPayload payload = SeedCipher.encrypt(mnemonic);
-        prefs().edit()
+        commitOrThrow(prefs().edit()
             .putString(KEY_SEED_IV, payload.ivBase64)
             .putString(KEY_SEED_CIPHERTEXT, payload.ciphertextBase64)
-            .putInt(KEY_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION)
-            .apply();
+            .putInt(KEY_RECEIVE_INDEX, Math.max(0, receiveIndex))
+            .putInt(KEY_SCHEMA_VERSION, Math.max(1, schemaVersion))
+            , "Unable to persist wallet seed");
     }
 
     private String deriveAddress(int index) {
@@ -225,6 +224,12 @@ public final class WalletManager {
     private SharedPreferences prefs() {
         Log.i(TAG, "Database initialization (SharedPreferences) for " + PREFS_NAME);
         return appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    private void commitOrThrow(SharedPreferences.Editor editor, String errorMessage) {
+        if (!editor.commit()) {
+            throw new IllegalStateException(errorMessage);
+        }
     }
 
     private void initializeStorage() {

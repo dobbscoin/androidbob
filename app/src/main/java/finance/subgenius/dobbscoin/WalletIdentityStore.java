@@ -27,7 +27,7 @@ public final class WalletIdentityStore {
             }
 
             walletId = UUID.randomUUID().toString();
-            prefs.edit().putString(KEY_WALLET_ID, walletId).apply();
+            commitOrThrow(prefs.edit().putString(KEY_WALLET_ID, walletId), "Unable to persist wallet_id");
             Log.i(TAG, "Generated new wallet_id=" + walletId);
             return walletId;
         } catch (Exception e) {
@@ -39,7 +39,7 @@ public final class WalletIdentityStore {
             }
 
             walletId = UUID.randomUUID().toString();
-            fallbackPrefs.edit().putString(KEY_WALLET_ID, walletId).apply();
+            commitOrThrow(fallbackPrefs.edit().putString(KEY_WALLET_ID, walletId), "Unable to persist fallback wallet_id");
             Log.i(TAG, "Generated fallback wallet_id=" + walletId);
             return walletId;
         }
@@ -59,11 +59,11 @@ public final class WalletIdentityStore {
             return;
         }
         try {
-            prefs(context).edit().putString(KEY_WALLET_ID, walletId).apply();
+            commitOrThrow(prefs(context).edit().putString(KEY_WALLET_ID, walletId), "Unable to restore wallet_id");
             Log.i(TAG, "Restored wallet_id=" + walletId);
         } catch (Exception e) {
             Log.e(TAG, "Secure wallet_id restore failed, using fallback preferences", e);
-            fallbackPrefs(context).edit().putString(KEY_WALLET_ID, walletId).apply();
+            commitOrThrow(fallbackPrefs(context).edit().putString(KEY_WALLET_ID, walletId), "Unable to restore fallback wallet_id");
             Log.i(TAG, "Restored fallback wallet_id=" + walletId);
         }
     }
@@ -89,5 +89,11 @@ public final class WalletIdentityStore {
     private static SharedPreferences fallbackPrefs(Context context) {
         Log.i(TAG, "Initializing fallback wallet identity storage");
         return context.getApplicationContext().getSharedPreferences(FALLBACK_PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    private static void commitOrThrow(SharedPreferences.Editor editor, String errorMessage) {
+        if (!editor.commit()) {
+            throw new IllegalStateException(errorMessage);
+        }
     }
 }

@@ -113,6 +113,7 @@ public class SplashScreenActivity extends Activity {
 
     private void initializeApp() {
         new Thread(() -> {
+            boolean initialized = false;
             try {
                 Log.i(
                     "Splash",
@@ -132,6 +133,7 @@ public class SplashScreenActivity extends Activity {
                     "Splash",
                     "Wallet ready"
                 );
+                initialized = true;
             } catch (Exception e) {
                 Log.e(
                     "Splash",
@@ -140,9 +142,14 @@ public class SplashScreenActivity extends Activity {
                 );
             }
 
-            runOnUiThread(
-                this::launchMain
-            );
+            final boolean walletInitialized = initialized;
+            runOnUiThread(() -> {
+                if (walletInitialized) {
+                    launchMain();
+                } else if (loadingTextView != null) {
+                    loadingTextView.setText("Wallet failed to open. Existing wallet preserved.");
+                }
+            });
         }).start();
     }
 

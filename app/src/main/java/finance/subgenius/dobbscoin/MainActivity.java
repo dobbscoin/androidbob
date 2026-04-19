@@ -49,6 +49,9 @@ import com.google.zxing.integration.android.IntentResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.ScriptBuilder;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -157,16 +160,11 @@ public class MainActivity extends Activity {
                 walletId = "";
             }
             walletManager = new WalletManager(this);
-            try {
-                WalletManager.LoadedWallet wallet = walletManager.loadOrCreateWallet();
-                if (wallet == null) {
-                    throw new IllegalStateException("Wallet initialization failed");
-                }
-                transactionSigner = new TransactionSigner(walletManager);
-            } catch (Exception e) {
-                Log.e(TAG, "Fatal wallet init error", e);
-                transactionSigner = new TransactionSigner(walletManager);
+            WalletManager.LoadedWallet wallet = walletManager.loadOrCreateWallet();
+            if (wallet == null) {
+                throw new IllegalStateException("Wallet initialization failed");
             }
+            transactionSigner = new TransactionSigner(walletManager);
 
             setContentView(buildContentView());
             renderConnectionState(ConnectionState.SYNCING);
@@ -845,9 +843,10 @@ public class MainActivity extends Activity {
             if (!item.optBoolean("spendable", true)) {
                 continue;
             }
-            String inputAddress = item.optString("address", "");
+            String inputAddress = resolveLocalUtxoAddress(item, trackedAddresses);
             int derivationIndex = findLocalDerivationIndex(inputAddress);
             if (derivationIndex < 0) {
+                Log.w(TAG, "Skipping UTXO with unmatched address payload=" + item.toString());
                 continue;
             }
             BigDecimal inputAmount = new BigDecimal(item.optString("amount", "0"));
@@ -873,6 +872,84 @@ public class MainActivity extends Activity {
         );
         transactionSigner.signTransaction(plan);
         return transactionSigner.serializeTransaction(plan);
+    }
+
+    private String resolveLocalUtxoAddress(JSONObject item, List<String> trackedAddresses) {
+        String directAddress = item.optString("address", "").trim();
+        if (trackedAddresses.contains(directAddress)) {
+            return directAddress;
+        }
+
+        String nestedAddress = findTrackedAddress(item.optJSONArray("addresses"), trackedAddresses);
+        if (!nestedAddress.isEmpty()) {
+            return nestedAddress;
+        }
+
+        Object scriptPubKey = item.opt("scriptPubKey");
+        if (scriptPubKey instanceof JSONObject) {
+            JSONObject scriptObject = (JSONObject) scriptPubKey;
+            String scriptAddress = scriptObject.optString("address", "").trim();
+            if (trackedAddresses.contains(scriptAddress)) {
+                return scriptAddress;
+            }
+
+            String scriptAddresses = findTrackedAddress(scriptObject.optJSONArray("addresses"), trackedAddresses);
+            if (!scriptAddresses.isEmpty()) {
+                return scriptAddresses;
+            }
+
+            String scriptHex = scriptObject.optString("hex", "").trim();
+            String resolvedFromScript = findTrackedAddressByScript(scriptHex, trackedAddresses);
+            if (!resolvedFromScript.isEmpty()) {
+                return resolvedFromScript;
+            }
+        } else if (scriptPubKey instanceof String) {
+            String resolvedFromScript = findTrackedAddressByScript(((String) scriptPubKey).trim(), trackedAddresses);
+            if (!resolvedFromScript.isEmpty()) {
+                return resolvedFromScript;
+            }
+        }
+
+        if (trackedAddresses.size() == 1) {
+            Log.w(TAG, "UTXO payload missing recognizable address, assuming sole tracked address");
+            return trackedAddresses.get(0);
+        }
+
+        return "";
+    }
+
+    private String findTrackedAddress(JSONArray addresses, List<String> trackedAddresses) {
+        if (addresses == null) {
+            return "";
+        }
+        for (int i = 0; i < addresses.length(); i++) {
+            String candidate = addresses.optString(i, "").trim();
+            if (trackedAddresses.contains(candidate)) {
+                return candidate;
+            }
+        }
+        return "";
+    }
+
+    private String findTrackedAddressByScript(String scriptHex, List<String> trackedAddresses) {
+        if (scriptHex == null || scriptHex.isEmpty()) {
+            return "";
+        }
+        for (String trackedAddress : trackedAddresses) {
+            try {
+                String trackedScriptHex = org.bitcoinj.core.Utils.HEX.encode(
+                    ScriptBuilder.createOutputScript(
+                        LegacyAddress.fromBase58(MainNetParams.get(), trackedAddress)
+                    ).getProgram()
+                );
+                if (scriptHex.equalsIgnoreCase(trackedScriptHex)) {
+                    return trackedAddress;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Unable to compare tracked address script for " + trackedAddress, e);
+            }
+        }
+        return "";
     }
 
     private int findLocalDerivationIndex(String address) {

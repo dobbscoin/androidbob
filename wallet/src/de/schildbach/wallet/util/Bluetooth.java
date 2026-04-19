@@ -46,8 +46,16 @@ public class Bluetooth
 	{
 		if (adapter == null)
 			return false;
-		if (MARSHMELLOW_FAKE_MAC.equals(adapter.getAddress()))
+		try
+		{
+			if (MARSHMELLOW_FAKE_MAC.equals(adapter.getAddress()))
+				return false;
+		}
+		catch (final SecurityException e)
+		{
+			// BLUETOOTH_CONNECT runtime permission not yet granted on Android 12+
 			return false;
+		}
 		return ENABLE_BLUETOOTH_LISTENING;
 	}
 

@@ -24,6 +24,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -31,6 +32,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -78,6 +80,7 @@ public final class ScanActivity extends Activity implements SurfaceHolder.Callba
 	private Handler cameraHandler;
 
 	private static final int DIALOG_CAMERA_PROBLEM = 0;
+	private static final int REQUEST_CODE_CAMERA = 1;
 
 	private static boolean DISABLE_CONTINUOUS_AUTOFOCUS = Build.MODEL.equals("GT-I9100") // Galaxy S2
 			|| Build.MODEL.equals("SGH-T989") // Galaxy S2
@@ -105,6 +108,30 @@ public final class ScanActivity extends Activity implements SurfaceHolder.Callba
 	{
 		super.onResume();
 
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+				&& checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+		{
+			requestPermissions(new String[] { Manifest.permission.CAMERA }, REQUEST_CODE_CAMERA);
+			return;
+		}
+
+		startCamera();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(final int requestCode, final String[] permissions, final int[] grantResults)
+	{
+		if (requestCode == REQUEST_CODE_CAMERA)
+		{
+			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+				startCamera();
+			else
+				showDialog(DIALOG_CAMERA_PROBLEM);
+		}
+	}
+
+	private void startCamera()
+	{
 		cameraThread = new HandlerThread("cameraThread", Process.THREAD_PRIORITY_BACKGROUND);
 		cameraThread.start();
 		cameraHandler = new Handler(cameraThread.getLooper());

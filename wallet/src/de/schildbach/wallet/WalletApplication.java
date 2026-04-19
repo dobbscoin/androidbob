@@ -20,15 +20,20 @@ package de.schildbach.wallet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.core.Wallet;
+import org.bitcoinj.core.WalletExtension;
 import org.bitcoinj.crypto.LinuxSecureRandom;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.store.UnreadableWalletException;
@@ -146,7 +151,7 @@ public class WalletApplication extends Application
 
 	private void afterLoadWallet()
 	{
-		wallet.autosaveToFile(walletFile, 10, TimeUnit.SECONDS, new WalletAutosaveEventListener());
+		wallet.autosaveToFile(walletFile, 1, TimeUnit.SECONDS, new WalletAutosaveEventListener());
 
 		// clean up spam
 		wallet.cleanup();
@@ -257,28 +262,36 @@ public class WalletApplication extends Application
 			{
 				walletStream = new FileInputStream(walletFile);
 
-				wallet = new WalletProtobufSerializer().readWallet(walletStream);
+				wallet = readWalletFromStream(walletStream);
 
-				if (!wallet.getParams().equals(Constants.NETWORK_PARAMETERS))
+				if (!wallet.getParams().getId().equals(Constants.NETWORK_PARAMETERS.getId()))
 					throw new UnreadableWalletException("bad wallet network parameters: " + wallet.getParams().getId());
 
 				log.info("wallet loaded from: '" + walletFile + "', took " + (System.currentTimeMillis() - start) + "ms");
+				writeDebugLog("wallet loaded OK: keys_earliest=" + wallet.getEarliestKeyCreationTime()
+						+ " txCount=" + wallet.getTransactions(true).size());
 			}
 			catch (final FileNotFoundException x)
 			{
-				log.error("problem loading wallet", x);
+				log.error("problem loading wallet: " + x.getMessage(), x);
+				writeDebugLog("WALLET FileNotFound: " + x.getMessage()
+						+ " | walletFile.exists=" + walletFile.exists()
+						+ " | walletFile.length=" + walletFile.length());
+				Toast.makeText(WalletApplication.this, "Wallet load failed: " + x.getMessage(), Toast.LENGTH_LONG).show();
 
-				Toast.makeText(WalletApplication.this, x.getClass().getName(), Toast.LENGTH_LONG).show();
-
-				wallet = restoreWalletFromBackup();
+				wallet = recoverWallet();
 			}
 			catch (final UnreadableWalletException x)
 			{
-				log.error("problem loading wallet", x);
+				log.error("problem loading wallet: " + x.getMessage(), x);
+				writeDebugLog("WALLET Unreadable: " + x.getMessage()
+						+ " | cause=" + (x.getCause() != null ? x.getCause().getClass().getSimpleName() + ": " + x.getCause().getMessage() : "null")
+						+ " | walletFile=" + walletFile.getAbsolutePath()
+						+ " | walletFile.length=" + walletFile.length()
+						+ " | first64=" + readFirstBytesHex(walletFile, 64));
+				Toast.makeText(WalletApplication.this, "Wallet load failed: " + x.getMessage(), Toast.LENGTH_LONG).show();
 
-				Toast.makeText(WalletApplication.this, x.getClass().getName(), Toast.LENGTH_LONG).show();
-
-				wallet = restoreWalletFromBackup();
+				wallet = recoverWallet();
 			}
 			finally
 			{
@@ -299,15 +312,16 @@ public class WalletApplication extends Application
 			{
 				Toast.makeText(this, "inconsistent wallet: " + walletFile, Toast.LENGTH_LONG).show();
 
-				wallet = restoreWalletFromBackup();
+				wallet = recoverWallet();
 			}
 
-			if (!wallet.getParams().equals(Constants.NETWORK_PARAMETERS))
+			if (!wallet.getParams().getId().equals(Constants.NETWORK_PARAMETERS.getId()))
 				throw new Error("bad wallet network parameters: " + wallet.getParams().getId());
 		}
 		else
 		{
 			wallet = new Wallet(Constants.NETWORK_PARAMETERS);
+			writeDebugLog("new wallet created (no existing file): keys_earliest=" + wallet.getEarliestKeyCreationTime());
 
 			backupWallet();
 
@@ -325,10 +339,13 @@ public class WalletApplication extends Application
 		{
 			is = openFileInput(Constants.Files.WALLET_KEY_BACKUP_PROTOBUF);
 
-			final Wallet wallet = new WalletProtobufSerializer().readWallet(is);
+			final Wallet wallet = readWalletFromStream(is);
 
 			if (!wallet.isConsistent())
-				throw new Error("inconsistent backup");
+			{
+				log.warn("backup inconsistent, creating fresh wallet");
+				return createFreshWallet();
+			}
 
 			resetBlockchain();
 
@@ -340,22 +357,109 @@ public class WalletApplication extends Application
 		}
 		catch (final IOException x)
 		{
-			throw new Error("cannot read backup", x);
+			log.warn("backup unreadable (" + x.getMessage() + "), creating fresh wallet");
+			return createFreshWallet();
 		}
 		catch (final UnreadableWalletException x)
 		{
-			throw new Error("cannot read backup", x);
+			log.warn("backup unreadable (" + x.getMessage() + "), creating fresh wallet");
+			return createFreshWallet();
 		}
 		finally
 		{
 			try
 			{
-				is.close();
+				if (is != null) is.close();
 			}
 			catch (final IOException x)
 			{
 				// swallow
 			}
+		}
+	}
+
+	/** Append a timestamped line to Downloads/dobbscoin_debug.txt for field diagnosis. */
+	private void writeDebugLog(final String msg)
+	{
+		try
+		{
+			final File dir = android.os.Environment.getExternalStoragePublicDirectory(
+					android.os.Environment.DIRECTORY_DOWNLOADS);
+			final File f = new File(dir, "dobbscoin_debug.txt");
+			final String line = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date())
+					+ "  " + msg + "\n";
+			final FileWriter fw = new FileWriter(f, true);
+			fw.write(line);
+			fw.close();
+		}
+		catch (final Exception e)
+		{
+			// best-effort — don't let debug logging break the app
+		}
+	}
+
+	/**
+	 * Called when the primary wallet file fails to load (corrupt or unreadable).
+	 * If no blockchain file exists we are on a fresh install — any backup is likely
+	 * a stale cloud-restore (e.g. Samsung Cloud), so skip it and create fresh keys.
+	 * Only fall back to the backup when the blockchain exists, meaning this is an
+	 * existing installation where we genuinely need to recover keys.
+	 */
+	private Wallet recoverWallet()
+	{
+		final File blockchainFile = new File(getDir("blockstore", Context.MODE_PRIVATE),
+				Constants.Files.BLOCKCHAIN_FILENAME);
+		final File backupFile = getFileStreamPath(Constants.Files.WALLET_KEY_BACKUP_PROTOBUF);
+		writeDebugLog("recoverWallet: blockchain.exists=" + blockchainFile.exists()
+				+ " blockchain.length=" + blockchainFile.length()
+				+ " | backup.exists=" + backupFile.exists()
+				+ " | walletFile.length=" + walletFile.length());
+		if (!blockchainFile.exists())
+		{
+			log.warn("wallet corrupt/unreadable and no blockchain — assuming stale cloud backup, creating fresh wallet");
+			writeDebugLog("recoverWallet -> createFreshWallet (no blockchain)");
+			return createFreshWallet();
+		}
+		writeDebugLog("recoverWallet -> restoreWalletFromBackup (blockchain exists)");
+		return restoreWalletFromBackup();
+	}
+
+	private Wallet createFreshWallet()
+	{
+		// Both primary wallet and backup are unreadable — wipe both and start clean.
+		// The user loses history but the app becomes functional again.
+		walletFile.delete();
+		getFileStreamPath(Constants.Files.WALLET_KEY_BACKUP_PROTOBUF).delete();
+		resetBlockchain();
+		Toast.makeText(this, "Wallet reset — starting fresh", Toast.LENGTH_LONG).show();
+		log.warn("wallet and backup both unreadable — created fresh wallet");
+		config.armBackupReminder();
+		return new Wallet(Constants.NETWORK_PARAMETERS);
+	}
+
+	/**
+	 * Deserialize a wallet from {@code stream} using {@link Constants#NETWORK_PARAMETERS} directly,
+	 * bypassing {@link org.bitcoinj.core.NetworkParameters#fromID} which returns the base
+	 * {@link org.bitcoinj.params.MainNetParams} singleton rather than our
+	 * {@link DobbscoinNetParams} singleton.  If we used the 1-arg
+	 * {@link WalletProtobufSerializer#readWallet(java.io.InputStream)} overload, bitcoinj's
+	 * internal Context check would throw {@link IllegalStateException} ("Context does not match
+	 * implicit network params") because the thread context holds DobbscoinNetParams but the
+	 * wallet was constructed with MainNetParams.
+	 */
+	private Wallet readWalletFromStream(final InputStream stream) throws UnreadableWalletException
+	{
+		try
+		{
+			final Protos.Wallet proto = Protos.Wallet.parseFrom(stream);
+			final WalletProtobufSerializer serializer = new WalletProtobufSerializer();
+			serializer.setRequireMandatoryExtensions(false);
+			return serializer.readWallet(Constants.NETWORK_PARAMETERS,
+					new WalletExtension[0], proto);
+		}
+		catch (final IOException x)
+		{
+			throw new UnreadableWalletException("Could not parse input stream to protobuf", x);
 		}
 	}
 
@@ -382,6 +486,54 @@ public class WalletApplication extends Application
 			Io.chmod(walletFile, 0777);
 
 		log.debug("wallet saved to: '" + walletFile + "', took " + (System.currentTimeMillis() - start) + "ms");
+
+		// Verify that what we just wrote can be read back — catches protobuf corruption immediately.
+		try
+		{
+			final FileInputStream verifyStream = new FileInputStream(walletFile);
+			try
+			{
+				readWalletFromStream(verifyStream);
+				writeDebugLog("saveWallet roundtrip OK path=" + walletFile.getAbsolutePath()
+						+ " length=" + walletFile.length());
+			}
+			catch (final Exception e)
+			{
+				writeDebugLog("saveWallet roundtrip FAILED: " + e.getMessage()
+						+ " | cause=" + (e.getCause() != null ? e.getCause().getClass().getSimpleName() + ": " + e.getCause().getMessage() : "null")
+						+ " | length=" + walletFile.length()
+						+ " | first64=" + readFirstBytesHex(walletFile, 64));
+			}
+			finally
+			{
+				verifyStream.close();
+			}
+		}
+		catch (final Exception e)
+		{
+			writeDebugLog("saveWallet verify open failed: " + e.getMessage());
+		}
+	}
+
+	/** Read the first {@code count} bytes of a file and return them as a lowercase hex string. */
+	private String readFirstBytesHex(final File file, final int count)
+	{
+		try
+		{
+			final FileInputStream fis = new FileInputStream(file);
+			final byte[] buf = new byte[count];
+			final int n = fis.read(buf, 0, count);
+			fis.close();
+			if (n <= 0) return "(empty)";
+			final StringBuilder sb = new StringBuilder(n * 2);
+			for (int i = 0; i < n; i++)
+				sb.append(String.format("%02x", buf[i] & 0xff));
+			return sb.toString();
+		}
+		catch (final Exception e)
+		{
+			return "ERR:" + e.getMessage();
+		}
 	}
 
 	public void backupWallet()

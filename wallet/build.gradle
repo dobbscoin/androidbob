@@ -4,15 +4,15 @@ plugins {
 
 android {
     namespace 'subgeneius.dobbs.wallet'
-    compileSdk 35
+    compileSdk 36
     buildToolsVersion '35.0.0'
 
     defaultConfig {
         applicationId 'subgeneius.dobbs.wallet'
         minSdk 21
-        targetSdk 35
-        versionCode 245
-        versionName '5.1.0'
+        targetSdk 36
+        versionCode 247
+        versionName '5.3.0'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }

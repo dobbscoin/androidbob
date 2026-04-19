@@ -27,7 +27,8 @@
 			android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
 			android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
 			android:layout_marginTop="8dp"
-			android:singleLine="true" />
+			android:maxLines="2"
+			android:ellipsize="end" />
 
 		<TextView
 			android:id="@+id/send_coins_payee_verified_by"

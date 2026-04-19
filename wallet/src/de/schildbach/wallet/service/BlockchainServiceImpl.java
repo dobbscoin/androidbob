@@ -239,6 +239,15 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		@Override
 		public void onPeerConnected(final Peer peer, final int peerCount)
 		{
+			final long services = peer.getPeerVersionMessage().localServices;
+			final boolean nodeNetwork = (services & 1) != 0;
+			final boolean nodeBloom   = (services & 4) != 0;
+			log.warn("### DOBBS DEBUG: peer CONNECTED: " + peer.getAddress()
+				+ " peerVersion=" + peer.getPeerVersionMessage().clientVersion
+				+ " subVer=" + peer.getPeerVersionMessage().subVer
+				+ " services=0x" + Long.toHexString(services)
+				+ " NODE_NETWORK=" + nodeNetwork
+				+ " NODE_BLOOM=" + nodeBloom);
 			this.peerCount = peerCount;
 			changed(peerCount);
 		}
@@ -246,8 +255,31 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		@Override
 		public void onPeerDisconnected(final Peer peer, final int peerCount)
 		{
+			log.warn("### DOBBS DEBUG: peer DISCONNECTED: " + peer.getAddress()
+				+ " peerCount=" + peerCount);
 			this.peerCount = peerCount;
 			changed(peerCount);
+		}
+
+		@Override
+		public org.bitcoinj.core.Message onPreMessageReceived(final Peer peer, final org.bitcoinj.core.Message m)
+		{
+			if (m instanceof org.bitcoinj.core.RejectMessage)
+			{
+				final org.bitcoinj.core.RejectMessage reject = (org.bitcoinj.core.RejectMessage) m;
+				log.warn("### DOBBS DEBUG: REJECT from " + peer.getAddress()
+					+ " msg=" + reject.getRejectedMessage()
+					+ " reason=" + reject.getReasonString()
+					+ " code=" + reject.getReasonCode());
+			}
+			return m;
+		}
+
+		@Override
+		public void onChainDownloadStarted(final Peer peer, final int blocksLeft)
+		{
+			log.warn("### DOBBS DEBUG: chain download STARTED via " + peer.getAddress()
+				+ " blocksLeft=" + blocksLeft);
 		}
 
 		@Override
@@ -363,6 +395,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 
 			if (impediments.isEmpty() && peerGroup == null)
 			{
+				log.warn("### DOBBS DEBUG: check() fired — starting PeerGroup");
 				log.debug("acquiring wakelock");
 				wakeLock.acquire();
 
@@ -381,6 +414,14 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 				peerGroup.setDownloadTxDependencies(false); // recursive implementation causes StackOverflowError
 				peerGroup.addWallet(wallet);
 				peerGroup.setUserAgent(Constants.USER_AGENT, application.packageInfo().versionName);
+				log.warn("### DOBBS DEBUG: protocol version = " + Constants.NETWORK_PARAMETERS.PROTOCOL_VERSION);
+				// Dobbscoin nodes require MIN_PEER_PROTO_VERSION = 70005 (version.h)
+				// Override VersionMessage to advertise 70005
+				final org.bitcoinj.core.VersionMessage ver = new org.bitcoinj.core.VersionMessage(Constants.NETWORK_PARAMETERS, 0);
+				ver.clientVersion = 70005;
+				ver.localServices = 0;
+				peerGroup.setVersionMessage(ver);
+				peerGroup.setMinRequiredProtocolVersion(70005);
 				peerGroup.addEventListener(peerConnectivityListener);
 
 				final int maxConnectedPeers = application.maxConnectedPeers();
@@ -395,7 +436,9 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 
 				peerGroup.addPeerDiscovery(new PeerDiscovery()
 				{
-					private final PeerDiscovery normalPeerDiscovery = new DnsDiscovery(Constants.NETWORK_PARAMETERS);
+					private final PeerDiscovery dnsDiscovery = new DnsDiscovery(
+						new String[]{"seed.dobbscoin.info", "node1.dobbscoin.info", "node2.dobbscoin.info"},
+						Constants.NETWORK_PARAMETERS);
 
 					@Override
 					public InetSocketAddress[] getPeers(final long timeoutValue, final TimeUnit timeoutUnit) throws PeerDiscoveryException
@@ -417,7 +460,15 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 						}
 
 						if (!connectTrustedPeerOnly)
-							peers.addAll(Arrays.asList(normalPeerDiscovery.getPeers(timeoutValue, timeoutUnit)));
+						{
+							try {
+								peers.addAll(Arrays.asList(
+									dnsDiscovery.getPeers(timeoutValue, timeoutUnit)
+								));
+							} catch (final PeerDiscoveryException e) {
+								log.warn("DNS discovery failed: " + e.getMessage());
+							}
+						}
 
 						// workaround because PeerGroup will shuffle peers
 						if (needsTrimPeersWorkaround)
@@ -430,12 +481,13 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 					@Override
 					public void shutdown()
 					{
-						normalPeerDiscovery.shutdown();
+						dnsDiscovery.shutdown();
 					}
 				});
 
 				// start peergroup
 				peerGroup.startAsync();
+				log.warn("### DOBBS DEBUG: peerGroup.startAsync() called");
 				peerGroup.startBlockChainDownload(blockchainDownloadListener);
 			}
 			else if (!impediments.isEmpty() && peerGroup != null)
@@ -453,6 +505,15 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 			broadcastBlockchainState();
 		}
 	};
+
+	private void checkNow()
+	{
+		log.warn("### DOBBS DEBUG: checkNow() called");
+		// CONNECTIVITY_ACTION may not be re-delivered on API 33+; kick check() once on startup
+		connectivityReceiver.onReceive(this,
+				new Intent(ConnectivityManager.CONNECTIVITY_ACTION)
+						.putExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false));
+	}
 
 	private final static class ActivityHistoryEntry
 	{
@@ -587,6 +648,13 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		blockChainFile = new File(getDir("blockstore", Context.MODE_PRIVATE), Constants.Files.BLOCKCHAIN_FILENAME);
 		final boolean blockChainFileExists = blockChainFile.exists();
 
+		// Sample transaction history BEFORE reset so we know if the wallet has real history.
+		// If it has old keys (e.g. restored by Samsung Cloud) but zero transactions,
+		// there is nothing to recover — start from current time so we pick the latest
+		// checkpoint rather than scanning years of history.
+		final boolean walletHasHistory = !wallet.getTransactions(true).isEmpty();
+		final long ONE_YEAR_SECS = 365L * 24 * 60 * 60;
+
 		if (!blockChainFileExists)
 		{
 			log.info("blockchain does not exist, resetting wallet");
@@ -598,7 +666,17 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 			blockStore = new SPVBlockStore(Constants.NETWORK_PARAMETERS, blockChainFile);
 			blockStore.getChainHead(); // detect corruptions as early as possible
 
-			final long earliestKeyCreationTime = wallet.getEarliestKeyCreationTime();
+			long earliestKeyCreationTime = wallet.getEarliestKeyCreationTime();
+
+			// If this is a fresh start and the wallet has no history, treat as brand-new
+			// regardless of key age (handles stale cloud-backup restores).
+			if (!blockChainFileExists && !walletHasHistory
+					&& earliestKeyCreationTime < System.currentTimeMillis() / 1000 - ONE_YEAR_SECS)
+			{
+				log.warn("wallet has old keys ({}) but no transaction history — using current time for checkpoint selection",
+						new java.util.Date(earliestKeyCreationTime * 1000));
+				earliestKeyCreationTime = System.currentTimeMillis() / 1000;
+			}
 
 			if (!blockChainFileExists && earliestKeyCreationTime > 0)
 			{
@@ -617,11 +695,64 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		}
 		catch (final BlockStoreException x)
 		{
+			// Block store is corrupt or locked (process was killed mid-write).
+			// Close any partially-opened store to release file locks, delete the
+			// file, reset the wallet, and rebuild from a checkpoint.
+			if (blockStore != null)
+			{
+				try { blockStore.close(); } catch (final BlockStoreException ignored) {}
+				blockStore = null;
+			}
 			blockChainFile.delete();
+			log.warn("blockstore corrupt/locked, deleted — recovering from checkpoints", x);
 
-			final String msg = "blockstore cannot be created";
-			log.error(msg, x);
-			throw new Error(msg, x);
+			wallet.reset();
+
+			try
+			{
+				blockStore = new SPVBlockStore(Constants.NETWORK_PARAMETERS, blockChainFile);
+				long earliestKeyCreationTime = wallet.getEarliestKeyCreationTime();
+				if (!walletHasHistory && earliestKeyCreationTime < System.currentTimeMillis() / 1000 - ONE_YEAR_SECS)
+					earliestKeyCreationTime = System.currentTimeMillis() / 1000;
+				if (earliestKeyCreationTime > 0)
+				{
+					try
+					{
+						final InputStream checkpointsInputStream = getAssets().open(Constants.Files.CHECKPOINTS_FILENAME);
+						CheckpointManager.checkpoint(Constants.NETWORK_PARAMETERS, checkpointsInputStream,
+								blockStore, earliestKeyCreationTime);
+						log.info("checkpoints loaded after blockstore recovery");
+					}
+					catch (final IOException iox)
+					{
+						log.error("problem reading checkpoints after recovery, continuing without", iox);
+					}
+				}
+			}
+			catch (final BlockStoreException x2)
+			{
+				// Second attempt failed — close whatever we have, wipe, and try one
+				// final time rather than hard-crashing the app with throw new Error.
+				if (blockStore != null)
+				{
+					try { blockStore.close(); } catch (final BlockStoreException ignored) {}
+					blockStore = null;
+				}
+				blockChainFile.delete();
+				log.error("blockstore second attempt failed, making final attempt with clean file", x2);
+				try
+				{
+					blockStore = new SPVBlockStore(Constants.NETWORK_PARAMETERS, blockChainFile);
+					log.warn("blockstore recovered on third attempt — checkpoints skipped");
+				}
+				catch (final BlockStoreException x3)
+				{
+					// All three attempts failed — give up.
+					final String msg = "blockstore cannot be created after 3 attempts";
+					log.error(msg, x3);
+					throw new Error(msg, x3);
+				}
+			}
 		}
 
 		try
@@ -638,6 +769,7 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		intentFilter.addAction(Intent.ACTION_DEVICE_STORAGE_LOW);
 		intentFilter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
 		registerReceiver(connectivityReceiver, intentFilter); // implicitly start PeerGroup
+		handler.post(new Runnable() { public void run() { checkNow(); } });
 
 		application.getWallet().addEventListener(walletEventListener, Threading.SAME_THREAD);
 
@@ -698,6 +830,10 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 	{
 		log.debug(".onDestroy()");
 
+		// Save wallet immediately — before the potentially-slow peerGroup.stop().
+		// If Android kills the process during shutdown, the wallet is already safe.
+		application.saveWallet();
+
 		WalletApplication.scheduleStartBlockchainService(this);
 
 		unregisterReceiver(tickReceiver);
@@ -725,10 +861,10 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		}
 		catch (final BlockStoreException x)
 		{
-			throw new RuntimeException(x);
+			// Don't hard-crash on close failure — log and continue so the rest of
+			// onDestroy() (wakeLock release, etc.) still runs.
+			log.error("blockstore close failed", x);
 		}
-
-		application.saveWallet();
 
 		if (wakeLock.isHeld())
 		{

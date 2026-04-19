@@ -237,7 +237,7 @@ public final class WalletActivity extends AbstractWalletActivity
 		final Resources res = getResources();
 		final String externalStorageState = Environment.getExternalStorageState();
 
-		menu.findItem(R.id.wallet_options_exchange_rates).setVisible(res.getBoolean(R.bool.show_exchange_rates_option));
+		// exchange rates removed
 		menu.findItem(R.id.wallet_options_restore_wallet).setEnabled(
 				Environment.MEDIA_MOUNTED.equals(externalStorageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(externalStorageState));
 		menu.findItem(R.id.wallet_options_backup_wallet).setEnabled(Environment.MEDIA_MOUNTED.equals(externalStorageState));
@@ -262,9 +262,6 @@ public final class WalletActivity extends AbstractWalletActivity
 			return true;
 		} else if (id == R.id.wallet_options_address_book) {
 			AddressBookActivity.start(this);
-			return true;
-		} else if (id == R.id.wallet_options_exchange_rates) {
-			startActivity(new Intent(this, ExchangeRatesActivity.class));
 			return true;
 		} else if (id == R.id.wallet_options_sweep_wallet) {
 			SweepWalletActivity.start(this);
@@ -519,6 +516,9 @@ public final class WalletActivity extends AbstractWalletActivity
 
 	private void checkAlerts()
 	{
+		if (Constants.VERSION_URL.isEmpty())
+			return;
+
 		final PackageInfo packageInfo = getWalletApplication().packageInfo();
 		final int versionNameSplit = packageInfo.versionName.indexOf('-');
 		final String base = Constants.VERSION_URL + (versionNameSplit >= 0 ? packageInfo.versionName.substring(versionNameSplit) : "");

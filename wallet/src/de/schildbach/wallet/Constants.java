@@ -21,7 +21,6 @@ import java.io.File;
 
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.MonetaryFormat;
 
@@ -41,7 +40,7 @@ public final class Constants
 	public static final boolean TEST = R.class.getPackage().getName().contains("_test");
 
 	/** Network this wallet is on (e.g. testnet or mainnet). */
-	public static final NetworkParameters NETWORK_PARAMETERS = TEST ? TestNet3Params.get() : MainNetParams.get();
+	public static final NetworkParameters NETWORK_PARAMETERS = TEST ? TestNet3Params.get() : DobbscoinNetParams.get();
 
 	/** Bitcoinj global context. */
 	public static final Context CONTEXT = new Context(NETWORK_PARAMETERS);
@@ -106,7 +105,7 @@ public final class Constants
 	public static final String DEFAULT_EXCHANGE_CURRENCY = "USD";
 
 	/** Donation address for tip/donate action. */
-	public static final String DONATION_ADDRESS = "1StangwQ9SiQrkSReB6QxMGwdtk3LuBZf";
+	public static final String DONATION_ADDRESS = "1EndCivT6cskgNU6cthzkzLRPyWbmx5ra6";
 
 	/** Recipient e-mail address for reports. */
 	public static final String REPORT_EMAIL = "dobbscoin@gmail.com";

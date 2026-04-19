@@ -181,9 +181,11 @@ public class WalletUtils
 	{
 		try
 		{
-			final Wallet wallet = new WalletProtobufSerializer().readWallet(is);
+			final WalletProtobufSerializer serializer = new WalletProtobufSerializer();
+			serializer.setRequireMandatoryExtensions(false);
+			final Wallet wallet = serializer.readWallet(is);
 
-			if (!wallet.getParams().equals(expectedNetworkParameters))
+			if (!wallet.getParams().getId().equals(expectedNetworkParameters.getId()))
 				throw new IOException("bad wallet backup network parameters: " + wallet.getParams().getId());
 			if (!wallet.isConsistent())
 				throw new IOException("inconsistent wallet backup");
@@ -352,7 +354,9 @@ public class WalletUtils
 		try
 		{
 			final ByteArrayInputStream is = new ByteArrayInputStream(walletBytes);
-			final Wallet wallet = new WalletProtobufSerializer().readWallet(is);
+			final WalletProtobufSerializer ser = new WalletProtobufSerializer();
+			ser.setRequireMandatoryExtensions(false);
+			final Wallet wallet = ser.readWallet(is);
 			is.close();
 			return wallet;
 		}

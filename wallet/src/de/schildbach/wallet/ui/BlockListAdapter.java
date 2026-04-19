@@ -34,7 +34,9 @@ import org.bitcoinj.core.Wallet;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -155,7 +157,18 @@ public class BlockListAdapter extends RecyclerView.Adapter<BlockListAdapter.Bloc
 		else
 			holder.timeView.setText(R.string.block_row_now);
 
-		holder.hashView.setText(WalletUtils.formatHash(null, header.getHashAsString(), 8, 0, ' '));
+		final String hashString = header.getHashAsString();
+		holder.hashView.setText(WalletUtils.formatHash(null, hashString, 8, 0, ' '));
+		holder.hashView.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(final View v)
+			{
+				final Uri uri = Uri.parse(
+						"https://explorer.dobbscoin.info/block/" + hashString);
+				v.getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
+			}
+		});
 
 		final int transactionChildCount = holder.transactionsViewGroup.getChildCount() - ROW_BASE_CHILD_COUNT;
 		int iTransactionView = 0;

@@ -114,7 +114,7 @@ public final class CurrencyTextView extends TextView
 		setPrefixColor(getResources().getColor(R.color.fg_less_significant));
 		setPrefixScaleX(1);
 		setInsignificantRelativeSize(0.85f);
-		setSingleLine();
+		// Do NOT force setSingleLine() here — let each usage control max lines via XML.
 	}
 
 	private void updateView()

@@ -64,7 +64,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateUtils;
+import android.graphics.Color;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
+import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -379,9 +384,37 @@ public class WalletTransactionsFragment extends Fragment implements LoaderCallba
 			final SpannableStringBuilder emptyText = new SpannableStringBuilder(
 					getString(direction == Direction.SENT ? R.string.wallet_transactions_fragment_empty_text_sent
 							: R.string.wallet_transactions_fragment_empty_text_received));
+			// Heading: bold + large
 			emptyText.setSpan(new StyleSpan(Typeface.BOLD), 0, emptyText.length(), SpannableStringBuilder.SPAN_POINT_MARK);
+			emptyText.setSpan(new RelativeSizeSpan(1.6f), 0, emptyText.length(), SpannableStringBuilder.SPAN_POINT_MARK);
+			// "TOMORROW" — even bigger and red
 			if (direction != Direction.SENT)
-				emptyText.append("\n\n").append(getString(R.string.wallet_transactions_fragment_empty_text_howto));
+			{
+				final String tomorrowLabel = "TOMORROW";
+				final int tomorrowStart = emptyText.toString().indexOf(tomorrowLabel);
+				if (tomorrowStart >= 0)
+				{
+					final int tomorrowEnd = tomorrowStart + tomorrowLabel.length();
+					emptyText.setSpan(new RelativeSizeSpan(1.4f), tomorrowStart, tomorrowEnd, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE);
+					emptyText.setSpan(new ForegroundColorSpan(Color.RED), tomorrowStart, tomorrowEnd, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE);
+				}
+			}
+			if (direction != Direction.SENT)
+			{
+				final String howto = getString(R.string.wallet_transactions_fragment_empty_text_howto);
+				final int howtoStart = emptyText.length() + 2; // after "\n\n"
+				emptyText.append("\n\n").append(howto);
+				// Body text slightly larger
+				emptyText.setSpan(new RelativeSizeSpan(1.15f), howtoStart, emptyText.length(), SpannableStringBuilder.SPAN_POINT_MARK);
+				// "Visit the Faucet" → clickable link
+				final String faucetLabel = "Visit the Faucet";
+				final int faucetStart = emptyText.toString().lastIndexOf(faucetLabel);
+				if (faucetStart >= 0)
+					emptyText.setSpan(new URLSpan("https://dobbscoin.info/faucet"),
+							faucetStart, faucetStart + faucetLabel.length(),
+							SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE);
+				emptyView.setMovementMethod(LinkMovementMethod.getInstance());
+			}
 			emptyView.setText(emptyText);
 		}
 		else

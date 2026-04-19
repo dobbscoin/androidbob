@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
+	android:fitsSystemWindows="true"
 	android:orientation="vertical" >
 
 	<de.schildbach.wallet.util.ViewPagerTabs
@@ -15,8 +16,8 @@
 	<androidx.viewpager.widget.ViewPager
 		android:id="@+id/network_monitor_pager"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_gravity="bottom|center_horizontal"
+		android:layout_height="0dp"
+		android:layout_weight="1"
 		android:background="@color/bg_bright" />
 
 </LinearLayout>

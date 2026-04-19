@@ -4,6 +4,7 @@
 	android:layout_height="match_parent"
 	android:background="@color/bg_form"
 	android:fillViewport="true"
+	android:fitsSystemWindows="true"
 	android:scrollbars="none" >
 
 	<fragment

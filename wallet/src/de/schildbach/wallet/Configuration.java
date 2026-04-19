@@ -71,7 +71,7 @@ public class Configuration
 
 
 	private static final int PREFS_DEFAULT_BOB_SHIFT = 0;
-	private static final int PREFS_DEFAULT_BOB_PRECISION = 1;
+	private static final int PREFS_DEFAULT_BOB_PRECISION = 8;
 
 	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 

@@ -14,35 +14,33 @@
 		android:paddingRight="@dimen/list_entry_padding_horizontal"
 		android:paddingTop="@dimen/list_entry_padding_vertical" >
 
-		<LinearLayout
+		<!-- Block number — large, bold, full width -->
+		<TextView
+			android:id="@+id/block_list_row_height"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:baselineAligned="true"
-			android:orientation="horizontal"
-			android:paddingBottom="2dp" >
+			android:textStyle="bold"
+			android:textSize="@dimen/font_size_normal" />
 
-			<TextView
-				android:id="@+id/block_list_row_height"
-				android:layout_width="0px"
-				android:layout_height="wrap_content"
-				android:layout_weight="1"
-				android:textStyle="bold" />
+		<!-- Relative time + absolute clock time -->
+		<TextView
+			android:id="@+id/block_list_row_time"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="2dp"
+			android:textColor="@color/fg_less_significant"
+			android:textSize="@dimen/font_size_small" />
 
-			<TextView
-				android:id="@+id/block_list_row_time"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content" />
-
-			<Space
-				android:layout_width="24dp"
-				android:layout_height="0px" />
-		</LinearLayout>
-
+		<!-- Block hash — styled as a tappable link to the block explorer -->
 		<TextView
 			android:id="@+id/block_list_row_hash"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:paddingTop="2dp" />
+			android:layout_marginTop="4dp"
+			android:paddingRight="32dp"
+			android:textColor="@color/fg_link"
+			android:textSize="@dimen/font_size_tiny" />
+
 	</LinearLayout>
 
 	<ImageButton

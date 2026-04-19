@@ -11,11 +11,31 @@
 		android:gravity="center"
 		android:orientation="vertical" >
 
-		<de.schildbach.wallet.ui.CurrencyTextView
-			android:id="@+id/wallet_balance_BOB"
+		<TextView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
+			android:text="Praise &quot;BOB&quot;"
+			android:textSize="@dimen/font_size_small"
+			android:textStyle="bold"
+			android:textColor="@color/fg_less_significant" />
+
+		<de.schildbach.wallet.ui.CurrencyTextView
+			android:id="@+id/wallet_balance_BOB"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:maxLines="1"
 			android:textSize="@dimen/font_size_huge" />
+
+		<TextView
+			android:id="@+id/wallet_balance_code"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:textStyle="bold"
+			android:textColor="@color/fg_less_significant"
+			android:textSize="@dimen/font_size_normal"
+			android:visibility="invisible" />
 
 		<TextView
 			android:id="@+id/wallet_balance_too_much"
@@ -34,6 +54,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginBottom="8dp"
+			android:maxLines="1"
 			android:paddingRight="8dp"
 			android:textSize="@dimen/font_size_small" />
 	</LinearLayout>

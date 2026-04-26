@@ -147,13 +147,7 @@ public class WalletBalanceWidgetProvider extends AppWidgetProvider
 
 		final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wallet_balance_widget_content);
 
-		final String currencyCode = BOBFormat.code();
-		if (MonetaryFormat.CODE_BTC.equals(currencyCode))
-			views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_bob);
-		else if (MonetaryFormat.CODE_MBTC.equals(currencyCode))
-			views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_mbob);
-		else if (MonetaryFormat.CODE_UBTC.equals(currencyCode))
-			views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_ubob);
+		views.setViewVisibility(R.id.widget_wallet_prefix, View.GONE);
 
 		views.setTextViewText(R.id.widget_wallet_balance_BOB, balanceStr);
 		views.setViewVisibility(R.id.widget_wallet_balance_local, localBalanceStr != null ? View.VISIBLE : View.GONE);

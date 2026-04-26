@@ -11,8 +11,8 @@ android {
         applicationId 'subgeneius.dobbs.wallet'
         minSdk 21
         targetSdk 36
-        versionCode 248
-        versionName '5.3.1'
+        versionCode 300
+        versionName '6.0.0'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -62,7 +62,8 @@ android {
                 'org/bitcoinj/crypto/mnemonic/wordlist/english.txt',
                 'org/bitcoinj/crypto/cacerts',
                 'org.bitcoin.production.checkpoints',
-                'org.bitcoin.test.checkpoints'
+                'org.bitcoin.test.checkpoints',
+                'META-INF/DEPENDENCIES'
             ]
         }
     }
@@ -111,6 +112,16 @@ dependencies {
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'com.github.tony19:logback-android:3.0.0'
+
+    // Animated GIF support (anibob.gif in warning row)
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
+    // Google Drive backup
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.api-client:google-api-client-android:2.2.0'
+    implementation 'com.google.http-client:google-http-client-android:1.43.3'
+    implementation 'com.google.http-client:google-http-client-gson:1.43.3'
+    implementation 'com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0'
 
     // Code quality
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

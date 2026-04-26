@@ -37,7 +37,15 @@
 			<item
 				android:id="@+id/wallet_options_backup_wallet"
 				android:showAsAction="never"
-				android:title="@string/export_keys_dialog_title"/>
+				android:title="@string/export_wallet_menu_title"/>
+			<item
+				android:id="@+id/wallet_options_seed_phrase"
+				android:showAsAction="never"
+				android:title="@string/export_seed_phrase_menu_title"/>
+			<item
+				android:id="@+id/wallet_options_import_seed_phrase"
+				android:showAsAction="never"
+				android:title="@string/import_seed_phrase_menu_title"/>
 			<item
 				android:id="@+id/wallet_options_restore_wallet"
 				android:showAsAction="never"
@@ -52,7 +60,7 @@
 		android:id="@+id/wallet_options_sweep_wallet"
 		android:showAsAction="never"
 		android:title="@string/sweep_wallet_activity_title"
-		android:visible="false"/>
+		android:visible="true"/>
 	<item
 		android:id="@+id/wallet_options_network_monitor"
 		android:showAsAction="never"

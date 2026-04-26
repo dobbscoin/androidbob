@@ -162,6 +162,32 @@
 				android:textColor="@color/fg_error"
 				android:textSize="@dimen/font_size_small" />
 		</LinearLayout>
+
+		<LinearLayout
+			android:id="@+id/transaction_row_extend_txid"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			android:paddingTop="6dp"
+			android:visibility="gone" >
+
+			<Space
+				android:layout_width="@dimen/symbol_size_normal"
+				android:layout_height="@dimen/symbol_size_normal"
+				android:layout_marginRight="8dp" />
+
+			<TextView
+				android:id="@+id/transaction_row_txid"
+				android:layout_width="0px"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:fontFamily="monospace"
+				android:textSize="10sp"
+				android:textColor="@color/fg_less_significant"
+				android:singleLine="true"
+				android:ellipsize="middle"
+				android:text="Tap to open in explorer →" />
+		</LinearLayout>
 	</LinearLayout>
 
 	<ImageButton

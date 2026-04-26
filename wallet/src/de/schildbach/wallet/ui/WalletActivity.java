@@ -68,9 +68,24 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import android.app.KeyguardManager;
+
+import org.bitcoinj.crypto.KeyCrypter;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.spongycastle.crypto.params.KeyParameter;
+
+import java.util.List;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.Scope;
+import com.google.api.services.drive.DriveScopes;
 import com.google.common.base.Charsets;
 
 import de.schildbach.wallet.Configuration;
+import de.schildbach.wallet.DriveBackupHelper;
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.data.PaymentIntent;
@@ -106,6 +121,12 @@ public final class WalletActivity extends AbstractWalletActivity
 	private Handler handler = new Handler();
 
 	private static final int REQUEST_CODE_SCAN = 0;
+	private static final int REQUEST_CODE_DRIVE_SIGN_IN = 1;
+	private static final int REQUEST_CODE_CONFIRM_CREDENTIALS = 2;
+
+	private File pendingDriveBackupFile;
+	private boolean seedRequestNeedsWalletPassword;
+	private String pendingCredentialAction; // "export_seed" or "import_seed"
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState)
@@ -206,7 +227,44 @@ public final class WalletActivity extends AbstractWalletActivity
 	@Override
 	public void onActivityResult(final int requestCode, final int resultCode, final Intent intent)
 	{
-		if (requestCode == REQUEST_CODE_SCAN && resultCode == Activity.RESULT_OK)
+		if (requestCode == REQUEST_CODE_CONFIRM_CREDENTIALS)
+		{
+			if (resultCode == Activity.RESULT_OK)
+			{
+				if ("import_seed".equals(pendingCredentialAction))
+					onImportCredentialsConfirmed();
+				else
+					onCredentialsConfirmed();
+			}
+			pendingCredentialAction = null;
+			// cancelled — do nothing
+		}
+		else if (requestCode == REQUEST_CODE_DRIVE_SIGN_IN)
+		{
+			if (resultCode == Activity.RESULT_OK)
+			{
+				GoogleSignIn.getSignedInAccountFromIntent(intent)
+						.addOnSuccessListener(account -> {
+							if (pendingDriveBackupFile != null)
+							{
+								uploadToDrive(pendingDriveBackupFile, account);
+								pendingDriveBackupFile = null;
+							}
+						})
+						.addOnFailureListener(e -> {
+							log.error("Google sign-in failed", e);
+							android.widget.Toast.makeText(WalletActivity.this,
+									"Google sign-in failed: " + e.getMessage(),
+									android.widget.Toast.LENGTH_LONG).show();
+						});
+			}
+			else
+			{
+				android.widget.Toast.makeText(this, "Google sign-in cancelled",
+						android.widget.Toast.LENGTH_SHORT).show();
+			}
+		}
+		else if (requestCode == REQUEST_CODE_SCAN && resultCode == Activity.RESULT_OK)
 		{
 			final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
@@ -295,6 +353,12 @@ public final class WalletActivity extends AbstractWalletActivity
 		} else if (id == R.id.wallet_options_backup_wallet) {
 			handleBackupWallet();
 			return true;
+		} else if (id == R.id.wallet_options_seed_phrase) {
+			handleSeedPhrase();
+			return true;
+		} else if (id == R.id.wallet_options_import_seed_phrase) {
+			handleImportSeedPhrase();
+			return true;
 		} else if (id == R.id.wallet_options_encrypt_keys) {
 			handleEncryptKeys();
 			return true;
@@ -335,6 +399,239 @@ public final class WalletActivity extends AbstractWalletActivity
 	public void handleEncryptKeys()
 	{
 		EncryptKeysDialogFragment.show(getFragmentManager());
+	}
+
+	/** Called by ArchiveBackupDialogFragment when the user taps Archive. */
+	void startDriveBackup(final File backupFile)
+	{
+		final Scope driveAppData = new Scope(DriveScopes.DRIVE_APPDATA);
+		final GoogleSignInAccount existing = GoogleSignIn.getLastSignedInAccount(this);
+		if (existing != null && GoogleSignIn.hasPermissions(existing, driveAppData))
+		{
+			uploadToDrive(backupFile, existing);
+		}
+		else
+		{
+			pendingDriveBackupFile = backupFile;
+			final GoogleSignInOptions opts = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+					.requestScopes(driveAppData)
+					.build();
+			final GoogleSignInClient client = GoogleSignIn.getClient(this, opts);
+			startActivityForResult(client.getSignInIntent(), REQUEST_CODE_DRIVE_SIGN_IN);
+		}
+	}
+
+	private void handleSeedPhrase()
+	{
+		pendingCredentialAction = "export_seed";
+		seedRequestNeedsWalletPassword = wallet.isEncrypted();
+
+		@SuppressWarnings("deprecation")
+		final KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+		if (km != null && km.isKeyguardSecure())
+		{
+			@SuppressWarnings("deprecation")
+			final Intent credIntent = km.createConfirmDeviceCredentialIntent(
+					getString(R.string.seed_phrase_auth_title),
+					getString(R.string.seed_phrase_auth_desc));
+			if (credIntent != null)
+			{
+				startActivityForResult(credIntent, REQUEST_CODE_CONFIRM_CREDENTIALS);
+				return;
+			}
+		}
+		// No device lock set — proceed but warn
+		onCredentialsConfirmed();
+	}
+
+	private void onCredentialsConfirmed()
+	{
+		if (seedRequestNeedsWalletPassword)
+		{
+			final android.widget.EditText passwordView = new android.widget.EditText(this);
+			passwordView.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+					| android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+			passwordView.setHint("Wallet password");
+
+			new AlertDialog.Builder(this)
+					.setTitle(R.string.seed_phrase_wallet_password_title)
+					.setMessage(R.string.seed_phrase_wallet_password_msg)
+					.setView(passwordView)
+					.setPositiveButton(R.string.button_ok, (d, w) -> {
+						final String pw = passwordView.getText().toString();
+						passwordView.setText(null);
+						displaySeedPhrase(pw);
+					})
+					.setNegativeButton(R.string.button_cancel, null)
+					.show();
+		}
+		else
+		{
+			displaySeedPhrase(null);
+		}
+	}
+
+	private void displaySeedPhrase(final String password)
+	{
+		final DeterministicSeed encSeed = wallet.getKeyChainSeed();
+		if (encSeed == null)
+		{
+			showNoSeedDialog();
+			return;
+		}
+
+		if (wallet.isEncrypted() && password != null)
+		{
+			// Key derivation is expensive — do it off the main thread
+			final KeyCrypter crypter = wallet.getKeyCrypter();
+			new Thread(() -> {
+				try
+				{
+					final KeyParameter aesKey = crypter.deriveKey(password);
+					final DeterministicSeed seed = encSeed.decrypt(crypter, "", aesKey);
+					final List<String> words = seed.getMnemonicCode();
+					runOnUiThread(() -> {
+						if (words == null || words.isEmpty())
+							showNoSeedDialog();
+						else
+							showSeedWordsDialog(words);
+					});
+				}
+				catch (final Exception e)
+				{
+					log.error("seed phrase decryption failed", e);
+					runOnUiThread(() -> android.widget.Toast.makeText(WalletActivity.this,
+							R.string.seed_phrase_wrong_password, android.widget.Toast.LENGTH_LONG).show());
+				}
+			}).start();
+		}
+		else
+		{
+			final List<String> words = encSeed.getMnemonicCode();
+			if (words == null || words.isEmpty())
+				showNoSeedDialog();
+			else
+				showSeedWordsDialog(words);
+		}
+	}
+
+	private void showSeedWordsDialog(final List<String> words)
+	{
+		final StringBuilder sb = new StringBuilder();
+		sb.append(getString(R.string.seed_phrase_dialog_intro)).append("\n\n");
+		for (int i = 0; i < words.size(); i++)
+			sb.append(String.format("%2d.  %s\n", i + 1, words.get(i)));
+
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.seed_phrase_dialog_title)
+				.setMessage(sb.toString())
+				.setPositiveButton(R.string.button_ok, null)
+				.show();
+	}
+
+	private void showNoSeedDialog()
+	{
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.seed_phrase_dialog_title)
+				.setMessage(R.string.seed_phrase_no_seed)
+				.setPositiveButton(R.string.button_ok, null)
+				.show();
+	}
+
+	private void handleImportSeedPhrase()
+	{
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.import_seed_phrase_warning_title)
+				.setMessage(R.string.import_seed_phrase_warning_msg)
+				.setPositiveButton(R.string.button_ok, (d, w) -> confirmImportSeedWithAuth())
+				.setNegativeButton(R.string.button_cancel, null)
+				.show();
+	}
+
+	private void confirmImportSeedWithAuth()
+	{
+		pendingCredentialAction = "import_seed";
+		@SuppressWarnings("deprecation")
+		final KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+		if (km != null && km.isKeyguardSecure())
+		{
+			@SuppressWarnings("deprecation")
+			final Intent credIntent = km.createConfirmDeviceCredentialIntent(
+					getString(R.string.seed_phrase_auth_title),
+					getString(R.string.import_seed_auth_desc));
+			if (credIntent != null)
+			{
+				startActivityForResult(credIntent, REQUEST_CODE_CONFIRM_CREDENTIALS);
+				return;
+			}
+		}
+		onImportCredentialsConfirmed();
+	}
+
+	private void onImportCredentialsConfirmed()
+	{
+		final android.widget.EditText input = new android.widget.EditText(this);
+		input.setHint("word1 word2 word3 …");
+		input.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+				| android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+				| android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+		input.setMinLines(3);
+
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.import_seed_phrase_dialog_title)
+				.setMessage(R.string.import_seed_phrase_dialog_msg)
+				.setView(input)
+				.setPositiveButton(R.string.button_ok, (d, w) -> {
+					final String text = input.getText().toString().trim().toLowerCase();
+					input.setText(null);
+					final String[] parts = text.split("\\s+");
+					validateAndImportSeed(java.util.Arrays.asList(parts));
+				})
+				.setNegativeButton(R.string.button_cancel, (d, w) -> input.setText(null))
+				.show();
+	}
+
+	private void validateAndImportSeed(final List<String> words)
+	{
+		new Thread(() -> {
+			try
+			{
+				org.bitcoinj.crypto.MnemonicCode.INSTANCE.check(words);
+				final org.bitcoinj.wallet.DeterministicSeed seed =
+						new org.bitcoinj.wallet.DeterministicSeed(words, null, "", 0);
+				final Wallet newWallet = Wallet.fromSeed(Constants.NETWORK_PARAMETERS, seed);
+				runOnUiThread(() -> {
+					try { restoreWallet(newWallet); }
+					catch (final IOException e) { log.error("seed restore failed", e); }
+				});
+			}
+			catch (final org.bitcoinj.crypto.MnemonicException e)
+			{
+				log.error("invalid mnemonic on import", e);
+				runOnUiThread(() -> android.widget.Toast.makeText(WalletActivity.this,
+						R.string.import_seed_phrase_invalid, android.widget.Toast.LENGTH_LONG).show());
+			}
+		}).start();
+	}
+
+	private void uploadToDrive(final File backupFile, final GoogleSignInAccount account)
+	{
+		new Thread(() -> {
+			try
+			{
+				DriveBackupHelper.upload(getApplicationContext(), account, backupFile);
+				log.info("wallet backup uploaded to Google Drive: {}", backupFile.getName());
+				runOnUiThread(() -> android.widget.Toast.makeText(WalletActivity.this,
+						"Backup saved to Google Drive", android.widget.Toast.LENGTH_LONG).show());
+			}
+			catch (final Exception e)
+			{
+				log.error("Drive backup failed", e);
+				runOnUiThread(() -> android.widget.Toast.makeText(WalletActivity.this,
+						"Drive backup failed: " + e.getMessage(),
+						android.widget.Toast.LENGTH_LONG).show());
+			}
+		}).start();
 	}
 
 	@Override

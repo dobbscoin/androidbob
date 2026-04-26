@@ -277,7 +277,11 @@ public class BackupWalletDialogFragment extends DialogFragment
 
 			log.info("backed up wallet to: '" + file + "'");
 
-			ArchiveBackupDialogFragment.show(getFragmentManager(), file);
+			android.widget.Toast.makeText(activity,
+					"Saved to Downloads: " + file.getName() + "\nUploading to Google Drive…",
+					android.widget.Toast.LENGTH_LONG).show();
+
+			((WalletActivity) activity).startDriveBackup(file);
 		}
 		catch (final IOException x)
 		{

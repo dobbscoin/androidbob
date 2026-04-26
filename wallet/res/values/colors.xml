@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+	<!-- launcher icon background (matches icon outer ring color) -->
+	<color name="ic_launcher_bg">#DC8F23</color>
+
 	<!-- foreground -->
 	<color name="fg_significant">#ff000000</color>
 	<color name="fg_link">#ff1a73e8</color>

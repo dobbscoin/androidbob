@@ -14,7 +14,8 @@
 		<TextView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="Praise &quot;BOB&quot;"
+			android:layout_marginTop="10dp"
+			android:text="Praise &quot;Bob&quot;"
 			android:textSize="@dimen/font_size_small"
 			android:textStyle="bold"
 			android:textColor="@color/fg_less_significant" />

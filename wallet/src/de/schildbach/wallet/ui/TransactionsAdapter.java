@@ -50,7 +50,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+import com.bumptech.glide.Glide;
 import de.schildbach.wallet.AddressBookProvider;
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.util.CircularProgressView;
@@ -283,7 +285,21 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 				@Override
 				public void onClick(final View v)
 				{
-					setSelectedItemId(getItemId(transactionHolder.getAdapterPosition()));
+					if (transactionHolder.itemView.isActivated())
+					{
+						// Second tap on selected row — open explorer
+						final String base = Constants.BITEASY_API_URL.endsWith("/")
+								? Constants.BITEASY_API_URL : Constants.BITEASY_API_URL + "/";
+						final android.net.Uri explorerUri = android.net.Uri.withAppendedPath(
+								android.net.Uri.parse(base), "tx/" + tx.getHashAsString());
+						context.startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, explorerUri)
+								.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+					}
+					else
+					{
+						// First tap — select the row (bind() will show TX ID)
+						setSelectedItemId(getItemId(transactionHolder.getAdapterPosition()));
+					}
 				}
 			});
 
@@ -305,6 +321,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
 			if (warning == Warning.BACKUP)
 			{
+				warningHolder.animView.setVisibility(android.view.View.GONE);
 				if (transactions.size() == 1)
 				{
 					warningHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
@@ -320,6 +337,8 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 			{
 				warningHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
 				warningHolder.messageView.setText(Html.fromHtml(context.getString(R.string.wallet_transactions_row_warning_storage_encryption)));
+				warningHolder.animView.setVisibility(android.view.View.VISIBLE);
+				warningHolder.animView.setImageResource(R.drawable.wsbob);
 			}
 		}
 	}
@@ -347,6 +366,8 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 		private final CurrencyTextView fiatView;
 		private final View extendMessageView;
 		private final TextView messageView;
+		private final View extendTxidView;
+		private final TextView txidView;
 		private final ImageButton menuView;
 
 		private TransactionViewHolder(final View itemView)
@@ -369,6 +390,8 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 			fiatView = (CurrencyTextView) itemView.findViewById(R.id.transaction_row_fiat);
 			extendMessageView = itemView.findViewById(R.id.transaction_row_extend_message);
 			messageView = (TextView) itemView.findViewById(R.id.transaction_row_message);
+			extendTxidView = itemView.findViewById(R.id.transaction_row_extend_txid);
+			txidView = (TextView) itemView.findViewById(R.id.transaction_row_txid);
 			menuView = (ImageButton) itemView.findViewById(R.id.transaction_row_menu);
 		}
 
@@ -645,6 +668,17 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 				messageView.setSingleLine(!itemView.isActivated());
 			}
 
+			// txid — shown only when row is selected; tapping the row a second time opens explorer
+			if (itemView.isActivated())
+			{
+				extendTxidView.setVisibility(View.VISIBLE);
+				txidView.setText(tx.getHashAsString());
+			}
+			else
+			{
+				extendTxidView.setVisibility(View.GONE);
+			}
+
 			// menu
 			menuView.setVisibility(itemView.isActivated() ? View.VISIBLE : View.GONE);
 		}
@@ -652,12 +686,14 @@ public class TransactionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
 	private class WarningViewHolder extends RecyclerView.ViewHolder
 	{
+		private final ImageView animView;
 		private final TextView messageView;
 
 		private WarningViewHolder(final View itemView)
 		{
 			super(itemView);
 
+			animView = (ImageView) itemView.findViewById(R.id.transaction_row_warning_image);
 			messageView = (TextView) itemView.findViewById(R.id.transaction_row_warning_message);
 
 			if (onClickListener != null)

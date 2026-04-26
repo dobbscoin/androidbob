@@ -1,14 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/transaction_row_warning_message"
-	style="@android:style/Widget.Holo.Button.Borderless"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
-	android:drawablePadding="@dimen/list_entry_padding_vertical_lax"
-	android:gravity="left|center_vertical"
-	android:paddingBottom="@dimen/list_entry_padding_vertical_lax"
+	android:orientation="horizontal"
+	android:gravity="center_vertical"
+	android:background="?android:attr/selectableItemBackground"
 	android:paddingLeft="@dimen/list_entry_padding_horizontal_lax"
 	android:paddingRight="@dimen/list_entry_padding_horizontal_lax"
 	android:paddingTop="@dimen/list_entry_padding_vertical_lax"
-	android:textColor="@color/fg_less_significant"
-	android:textSize="@dimen/font_size_small" />
+	android:paddingBottom="@dimen/list_entry_padding_vertical_lax">
+
+	<TextView
+		android:id="@+id/transaction_row_warning_message"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_weight="1"
+		android:drawablePadding="@dimen/list_entry_padding_vertical_lax"
+		android:gravity="left|center_vertical"
+		android:textColor="@color/fg_less_significant"
+		android:textSize="@dimen/font_size_small" />
+
+	<ImageView
+		android:id="@+id/transaction_row_warning_image"
+		android:layout_width="wrap_content"
+		android:layout_height="80dp"
+		android:layout_marginLeft="12dp"
+		android:scaleType="fitCenter"
+		android:adjustViewBounds="true"
+		android:visibility="gone" />
+
+</LinearLayout>

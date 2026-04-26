@@ -4,12 +4,12 @@
     android:background="#000000"
     android:fitsSystemWindows="true">
 
-    <!-- Background image — offset down ~1/8 screen, side margins keep it from edge-to-edge -->
+    <!-- Background image — offset down to leave room for tagline above -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="96dp"
+        android:layout_marginTop="148dp"
         android:layout_marginLeft="32dp"
         android:layout_marginRight="32dp"
         android:adjustViewBounds="true"
@@ -23,22 +23,28 @@
         android:layout_height="match_parent"
         android:background="#55000000" />
 
-    <!-- Tagline — centered in the space above the splash image -->
+    <!-- Tagline — two lines, auto-sized to fill the width -->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="40dp"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
         android:gravity="center"
-        android:text="Where Culture becomes Capital"
-        android:textColor="#33FF33"
+        android:maxLines="2"
+        android:text="Where Culture\nBecomes Capital"
+        android:textColor="#FFD700"
         android:textStyle="bold"
-        android:textSize="17sp"
-        android:letterSpacing="0.05"
+        android:fontFamily="serif"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="12sp"
+        android:autoSizeMaxTextSize="72sp"
+        android:letterSpacing="0.03"
         android:shadowColor="#000000"
         android:shadowDx="2"
         android:shadowDy="2"
-        android:shadowRadius="6" />
+        android:shadowRadius="8" />
 
     <!-- LOADING block — floats in the vertical center -->
     <LinearLayout

@@ -18,116 +18,124 @@
 package de.schildbach.wallet.ui.preference;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.Preference;
-import android.preference.Preference.OnPreferenceChangeListener;
-import android.preference.PreferenceFragment;
+import android.os.Looper;
+
+import androidx.annotation.NonNull;
+import androidx.preference.Preference;
+import androidx.preference.Preference.OnPreferenceChangeListener;
+import androidx.preference.PreferenceFragmentCompat;
+
 import de.schildbach.wallet.Configuration;
 import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.WalletBalanceWidgetProvider;
 import subgeneius.dobbs.wallet.R;
 
-/**
- * @author Andreas Schildbach
- */
-public final class SettingsFragment extends PreferenceFragment implements OnPreferenceChangeListener
+public final class SettingsFragment extends PreferenceFragmentCompat implements OnPreferenceChangeListener
 {
-	private Activity activity;
-	private WalletApplication application;
-	private PackageManager pm;
+    private Activity activity;
+    private WalletApplication application;
+    private PackageManager pm;
 
-	private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
-	private Preference BOBPrecisionPreference;
-	private Preference trustedPeerPreference;
-	private Preference trustedPeerOnlyPreference;
+    private Preference BOBPrecisionPreference;
+    private Preference trustedPeerPreference;
+    private Preference trustedPeerOnlyPreference;
 
-	@Override
-	public void onAttach(final Activity activity)
-	{
-		super.onAttach(activity);
+    @Override
+    public void onAttach(@NonNull final Context context)
+    {
+        super.onAttach(context);
+        this.activity = (Activity) context;
+        this.application = (WalletApplication) activity.getApplication();
+        this.pm = activity.getPackageManager();
+    }
 
-		this.activity = activity;
-		this.application = (WalletApplication) activity.getApplication();
-		this.pm = activity.getPackageManager();
-	}
+    @Override
+    public void onCreatePreferences(final Bundle savedInstanceState, final String rootKey)
+    {
+        setPreferencesFromResource(R.xml.preference_settings, rootKey);
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
+        BOBPrecisionPreference = findPreference(Configuration.PREFS_KEY_BOB_PRECISION);
+        if (BOBPrecisionPreference != null)
+            BOBPrecisionPreference.setOnPreferenceChangeListener(this);
 
-		addPreferencesFromResource(R.xml.preference_settings);
+        trustedPeerPreference = findPreference(Configuration.PREFS_KEY_TRUSTED_PEER);
+        if (trustedPeerPreference != null)
+            trustedPeerPreference.setOnPreferenceChangeListener(this);
 
-		BOBPrecisionPreference = findPreference(Configuration.PREFS_KEY_BOB_PRECISION);
-		BOBPrecisionPreference.setOnPreferenceChangeListener(this);
+        trustedPeerOnlyPreference = findPreference(Configuration.PREFS_KEY_TRUSTED_PEER_ONLY);
+        if (trustedPeerOnlyPreference != null)
+            trustedPeerOnlyPreference.setOnPreferenceChangeListener(this);
 
-		trustedPeerPreference = findPreference(Configuration.PREFS_KEY_TRUSTED_PEER);
-		trustedPeerPreference.setOnPreferenceChangeListener(this);
+        final Preference dataUsagePreference = findPreference(Configuration.PREFS_KEY_DATA_USAGE);
+        if (dataUsagePreference != null && dataUsagePreference.getIntent() != null)
+            dataUsagePreference.setEnabled(pm.resolveActivity(dataUsagePreference.getIntent(), 0) != null);
 
-		trustedPeerOnlyPreference = findPreference(Configuration.PREFS_KEY_TRUSTED_PEER_ONLY);
-		trustedPeerOnlyPreference.setOnPreferenceChangeListener(this);
+        final SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+        final String trustedPeer = prefs.getString(Configuration.PREFS_KEY_TRUSTED_PEER, "").trim();
+        updateTrustedPeer(trustedPeer);
+    }
 
-		final Preference dataUsagePreference = findPreference(Configuration.PREFS_KEY_DATA_USAGE);
-		dataUsagePreference.setEnabled(pm.resolveActivity(dataUsagePreference.getIntent(), 0) != null);
+    @Override
+    public void onDestroy()
+    {
+        if (trustedPeerOnlyPreference != null)
+            trustedPeerOnlyPreference.setOnPreferenceChangeListener(null);
+        if (trustedPeerPreference != null)
+            trustedPeerPreference.setOnPreferenceChangeListener(null);
+        if (BOBPrecisionPreference != null)
+            BOBPrecisionPreference.setOnPreferenceChangeListener(null);
 
-		final SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
-		final String trustedPeer = prefs.getString(Configuration.PREFS_KEY_TRUSTED_PEER, "").trim();
-		updateTrustedPeer(trustedPeer);
-	}
+        super.onDestroy();
+    }
 
-	@Override
-	public void onDestroy()
-	{
-		trustedPeerOnlyPreference.setOnPreferenceChangeListener(null);
-		trustedPeerPreference.setOnPreferenceChangeListener(null);
-		BOBPrecisionPreference.setOnPreferenceChangeListener(null);
+    @Override
+    public boolean onPreferenceChange(@NonNull final Preference preference, final Object newValue)
+    {
+        // delay action because preference isn't persisted until after this method returns
+        handler.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (preference.equals(BOBPrecisionPreference))
+                {
+                    WalletBalanceWidgetProvider.updateWidgets(activity, application.getWallet());
+                }
+                else if (preference.equals(trustedPeerPreference))
+                {
+                    application.stopBlockchainService();
+                    updateTrustedPeer((String) newValue);
+                }
+                else if (preference.equals(trustedPeerOnlyPreference))
+                {
+                    application.stopBlockchainService();
+                }
+            }
+        });
 
-		super.onDestroy();
-	}
+        return true;
+    }
 
-	@Override
-	public boolean onPreferenceChange(final Preference preference, final Object newValue)
-	{
-		// delay action because preference isn't persisted until after this method returns
-		handler.post(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				if (preference.equals(BOBPrecisionPreference))
-				{
-					WalletBalanceWidgetProvider.updateWidgets(activity, application.getWallet());
-				}
-				else if (preference.equals(trustedPeerPreference))
-				{
-					application.stopBlockchainService();
-					updateTrustedPeer((String) newValue);
-				}
-				else if (preference.equals(trustedPeerOnlyPreference))
-				{
-					application.stopBlockchainService();
-				}
-			}
-		});
-
-		return true;
-	}
-
-	private void updateTrustedPeer(final String trustedPeer)
-	{
-		if (trustedPeer.isEmpty())
-		{
-			trustedPeerPreference.setSummary(R.string.preferences_trusted_peer_summary);
-			trustedPeerOnlyPreference.setEnabled(false);
-		}
-		else
-		{
-			trustedPeerPreference.setSummary(trustedPeer);
-			trustedPeerOnlyPreference.setEnabled(true);
-		}
-	}
+    private void updateTrustedPeer(final String trustedPeer)
+    {
+        if (trustedPeerPreference == null || trustedPeerOnlyPreference == null)
+            return;
+        if (trustedPeer.isEmpty())
+        {
+            trustedPeerPreference.setSummary(R.string.preferences_trusted_peer_summary);
+            trustedPeerOnlyPreference.setEnabled(false);
+        }
+        else
+        {
+            trustedPeerPreference.setSummary(trustedPeer);
+            trustedPeerOnlyPreference.setEnabled(true);
+        }
+    }
 }

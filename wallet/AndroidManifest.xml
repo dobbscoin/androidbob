@@ -169,7 +169,7 @@
 			android:exported="false"
 			android:label="@string/preferences_activity_title"
 			android:screenOrientation="behind"
-			android:theme="@style/My.Theme.ChildActivity" />
+			android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 		<activity
 			android:name="de.schildbach.wallet.ui.RestoreWalletActivity"
 			android:configChanges="orientation|keyboard|keyboardHidden"

@@ -19,8 +19,7 @@ package de.schildbach.wallet.ui.preference;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.FragmentManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -30,6 +29,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,72 +40,69 @@ import de.schildbach.wallet.ui.DialogBuilder;
 import de.schildbach.wallet.util.Qr;
 import subgeneius.dobbs.wallet.R;
 
-/**
- * @author Andreas Schildbach
- */
 public class ExtendedPublicKeyFragment extends DialogFragment
 {
-	private static final String FRAGMENT_TAG = ExtendedPublicKeyFragment.class.getName();
+    private static final String FRAGMENT_TAG = ExtendedPublicKeyFragment.class.getName();
 
-	private static final String KEY_XPUB = "xpub";
+    private static final String KEY_XPUB = "xpub";
 
-	private static final Logger log = LoggerFactory.getLogger(ExtendedPublicKeyFragment.class);
+    private static final Logger log = LoggerFactory.getLogger(ExtendedPublicKeyFragment.class);
 
-	public static void show(final FragmentManager fm, final CharSequence xpub)
-	{
-		instance(xpub).show(fm, FRAGMENT_TAG);
-	}
+    public static void show(final FragmentManager fm, final CharSequence xpub)
+    {
+        instance(xpub).show(fm, FRAGMENT_TAG);
+    }
 
-	private static ExtendedPublicKeyFragment instance(final CharSequence xpub)
-	{
-		final ExtendedPublicKeyFragment fragment = new ExtendedPublicKeyFragment();
+    private static ExtendedPublicKeyFragment instance(final CharSequence xpub)
+    {
+        final ExtendedPublicKeyFragment fragment = new ExtendedPublicKeyFragment();
 
-		final Bundle args = new Bundle();
-		args.putCharSequence(KEY_XPUB, xpub);
-		fragment.setArguments(args);
+        final Bundle args = new Bundle();
+        args.putCharSequence(KEY_XPUB, xpub);
+        fragment.setArguments(args);
 
-		return fragment;
-	}
+        return fragment;
+    }
 
-	private Activity activity;
+    private Activity activity;
 
-	@Override
-	public void onAttach(final Activity activity)
-	{
-		super.onAttach(activity);
+    @Override
+    public void onAttach(@NonNull final Context context)
+    {
+        super.onAttach(context);
+        this.activity = (Activity) context;
+    }
 
-		this.activity = activity;
-	}
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(final Bundle savedInstanceState)
+    {
+        final String xpub = getArguments().getCharSequence(KEY_XPUB).toString();
 
-	@Override
-	public Dialog onCreateDialog(final Bundle savedInstanceState)
-	{
-		final String xpub = getArguments().getCharSequence(KEY_XPUB).toString();
+        final View view = LayoutInflater.from(activity).inflate(R.layout.extended_public_key_dialog, null);
 
-		final View view = LayoutInflater.from(activity).inflate(R.layout.extended_public_key_dialog, null);
+        final ImageView imageView = (ImageView) view.findViewById(R.id.extended_public_key_dialog_image);
+        final int size = getResources().getDimensionPixelSize(R.dimen.bitmap_dialog_qr_size);
+        final Bitmap bitmap = Qr.bitmap(xpub, size);
+        imageView.setImageBitmap(bitmap);
 
-		final ImageView imageView = (ImageView) view.findViewById(R.id.extended_public_key_dialog_image);
-		final int size = getResources().getDimensionPixelSize(R.dimen.bitmap_dialog_qr_size);
-		final Bitmap bitmap = Qr.bitmap(xpub, size);
-		imageView.setImageBitmap(bitmap);
+        final DialogBuilder dialog = new DialogBuilder(activity);
+        dialog.setView(view);
+        dialog.setNegativeButton(R.string.button_dismiss, null);
+        dialog.setPositiveButton(R.string.button_share, new OnClickListener()
+        {
+            @Override
+            public void onClick(final DialogInterface dialog, final int which)
+            {
+                final Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, xpub);
+                intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.extended_public_key_fragment_title));
+                startActivity(Intent.createChooser(intent, getString(R.string.extended_public_key_fragment_share)));
+                log.info("xpub shared via intent: {}", xpub);
+            }
+        });
 
-		final DialogBuilder dialog = new DialogBuilder(activity);
-		dialog.setView(view);
-		dialog.setNegativeButton(R.string.button_dismiss, null);
-		dialog.setPositiveButton(R.string.button_share, new OnClickListener()
-		{
-			@Override
-			public void onClick(final DialogInterface dialog, final int which)
-			{
-				final Intent intent = new Intent(Intent.ACTION_SEND);
-				intent.setType("text/plain");
-				intent.putExtra(Intent.EXTRA_TEXT, xpub);
-				intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.extended_public_key_fragment_title));
-				startActivity(Intent.createChooser(intent, getString(R.string.extended_public_key_fragment_share)));
-				log.info("xpub shared via intent: {}", xpub);
-			}
-		});
-
-		return dialog.show();
-	}
+        return dialog.show();
+    }
 }

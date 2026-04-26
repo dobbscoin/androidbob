@@ -3,6 +3,7 @@ package de.schildbach.wallet.ui;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import subgeneius.dobbs.wallet.R;
 
 public class SplashScreen extends Activity {
@@ -51,6 +53,16 @@ public class SplashScreen extends Activity {
                 Intent browser = new Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://www.subgenius.com/scatalog/membership.htm"));
                 startActivity(browser);
+            }
+        });
+
+        // © SubGenius Finance — underlined, opens https://subgenius.finance
+        TextView copyright = findViewById(R.id.splash_copyright);
+        copyright.setPaintFlags(copyright.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        copyright.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://subgenius.finance")));
             }
         });
 

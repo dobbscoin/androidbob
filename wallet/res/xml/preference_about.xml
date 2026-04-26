@@ -37,7 +37,7 @@
 			android:data="https://discord.gg/KGv2nTqWgt" />
 	</Preference>
 	<Preference
-		android:summary="© 2011-2026, SubGenius Finance"
+		android:summary="© 1978-2026 The SubGenius Foundation\n© 2014-2026 SubGenius Finance"
 		android:title="@string/about_copyright_title" />
 	<Preference
 		android:key="about_license"

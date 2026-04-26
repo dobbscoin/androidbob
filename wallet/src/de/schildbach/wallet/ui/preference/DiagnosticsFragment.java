@@ -25,12 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceScreen;
+
+import androidx.annotation.NonNull;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.ui.DialogBuilder;
@@ -38,128 +41,122 @@ import de.schildbach.wallet.ui.ReportIssueDialogBuilder;
 import de.schildbach.wallet.util.CrashReporter;
 import subgeneius.dobbs.wallet.R;
 
-/**
- * @author Andreas Schildbach
- */
-public final class DiagnosticsFragment extends PreferenceFragment
+public final class DiagnosticsFragment extends PreferenceFragmentCompat
 {
-	private Activity activity;
-	private WalletApplication application;
+    private Activity activity;
+    private WalletApplication application;
 
-	private static final String PREFS_KEY_REPORT_ISSUE = "report_issue";
-	private static final String PREFS_KEY_INITIATE_RESET = "initiate_reset";
-	private static final String PREFS_KEY_EXTENDED_PUBLIC_KEY = "extended_public_key";
+    private static final String PREFS_KEY_REPORT_ISSUE = "report_issue";
+    private static final String PREFS_KEY_INITIATE_RESET = "initiate_reset";
+    private static final String PREFS_KEY_EXTENDED_PUBLIC_KEY = "extended_public_key";
 
-	private static final Logger log = LoggerFactory.getLogger(DiagnosticsFragment.class);
+    private static final Logger log = LoggerFactory.getLogger(DiagnosticsFragment.class);
 
-	@Override
-	public void onAttach(final Activity activity)
-	{
-		super.onAttach(activity);
+    @Override
+    public void onAttach(@NonNull final Context context)
+    {
+        super.onAttach(context);
+        this.activity = (Activity) context;
+        this.application = (WalletApplication) activity.getApplication();
+    }
 
-		this.activity = activity;
-		this.application = (WalletApplication) activity.getApplication();
-	}
+    @Override
+    public void onCreatePreferences(final Bundle savedInstanceState, final String rootKey)
+    {
+        setPreferencesFromResource(R.xml.preference_diagnostics, rootKey);
+    }
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
+    @Override
+    public boolean onPreferenceTreeClick(@NonNull final Preference preference)
+    {
+        final String key = preference.getKey();
 
-		addPreferencesFromResource(R.xml.preference_diagnostics);
-	}
+        if (PREFS_KEY_REPORT_ISSUE.equals(key))
+        {
+            handleReportIssue();
+            return true;
+        }
+        else if (PREFS_KEY_INITIATE_RESET.equals(key))
+        {
+            handleInitiateReset();
+            return true;
+        }
+        else if (PREFS_KEY_EXTENDED_PUBLIC_KEY.equals(key))
+        {
+            handleExtendedPublicKey();
+            return true;
+        }
 
-	@Override
-	public boolean onPreferenceTreeClick(final PreferenceScreen preferenceScreen, final Preference preference)
-	{
-		final String key = preference.getKey();
+        return super.onPreferenceTreeClick(preference);
+    }
 
-		if (PREFS_KEY_REPORT_ISSUE.equals(key))
-		{
-			handleReportIssue();
-			return true;
-		}
-		else if (PREFS_KEY_INITIATE_RESET.equals(key))
-		{
-			handleInitiateReset();
-			return true;
-		}
-		else if (PREFS_KEY_EXTENDED_PUBLIC_KEY.equals(key))
-		{
-			handleExtendedPublicKey();
-			return true;
-		}
+    private void handleReportIssue()
+    {
+        final ReportIssueDialogBuilder dialog = new ReportIssueDialogBuilder(activity, R.string.report_issue_dialog_title_issue,
+                R.string.report_issue_dialog_message_issue)
+        {
+            @Override
+            protected CharSequence subject()
+            {
+                return Constants.REPORT_SUBJECT_ISSUE + " " + application.packageInfo().versionName;
+            }
 
-		return false;
-	}
+            @Override
+            protected CharSequence collectApplicationInfo() throws IOException
+            {
+                final StringBuilder applicationInfo = new StringBuilder();
+                CrashReporter.appendApplicationInfo(applicationInfo, application);
+                return applicationInfo;
+            }
 
-	private void handleReportIssue()
-	{
-		final ReportIssueDialogBuilder dialog = new ReportIssueDialogBuilder(activity, R.string.report_issue_dialog_title_issue,
-				R.string.report_issue_dialog_message_issue)
-		{
-			@Override
-			protected CharSequence subject()
-			{
-				return Constants.REPORT_SUBJECT_ISSUE + " " + application.packageInfo().versionName;
-			}
+            @Override
+            protected CharSequence collectStackTrace()
+            {
+                return null;
+            }
 
-			@Override
-			protected CharSequence collectApplicationInfo() throws IOException
-			{
-				final StringBuilder applicationInfo = new StringBuilder();
-				CrashReporter.appendApplicationInfo(applicationInfo, application);
-				return applicationInfo;
-			}
+            @Override
+            protected CharSequence collectDeviceInfo() throws IOException
+            {
+                final StringBuilder deviceInfo = new StringBuilder();
+                CrashReporter.appendDeviceInfo(deviceInfo, activity);
+                return deviceInfo;
+            }
 
-			@Override
-			protected CharSequence collectStackTrace()
-			{
-				return null;
-			}
+            @Override
+            protected CharSequence collectWalletDump()
+            {
+                return application.getWallet().toString(false, true, true, null);
+            }
+        };
+        dialog.show();
+    }
 
-			@Override
-			protected CharSequence collectDeviceInfo() throws IOException
-			{
-				final StringBuilder deviceInfo = new StringBuilder();
-				CrashReporter.appendDeviceInfo(deviceInfo, activity);
-				return deviceInfo;
-			}
+    private void handleInitiateReset()
+    {
+        final DialogBuilder dialog = new DialogBuilder(activity);
+        dialog.setTitle(R.string.preferences_initiate_reset_title);
+        dialog.setMessage(R.string.preferences_initiate_reset_dialog_message);
+        dialog.setPositiveButton(R.string.preferences_initiate_reset_dialog_positive, new OnClickListener()
+        {
+            @Override
+            public void onClick(final DialogInterface dialog, final int which)
+            {
+                log.info("manually initiated blockchain reset");
 
-			@Override
-			protected CharSequence collectWalletDump()
-			{
-				return application.getWallet().toString(false, true, true, null);
-			}
-		};
-		dialog.show();
-	}
+                application.resetBlockchain();
+                activity.finish();
+            }
+        });
+        dialog.setNegativeButton(R.string.button_dismiss, null);
+        dialog.show();
+    }
 
-	private void handleInitiateReset()
-	{
-		final DialogBuilder dialog = new DialogBuilder(activity);
-		dialog.setTitle(R.string.preferences_initiate_reset_title);
-		dialog.setMessage(R.string.preferences_initiate_reset_dialog_message);
-		dialog.setPositiveButton(R.string.preferences_initiate_reset_dialog_positive, new OnClickListener()
-		{
-			@Override
-			public void onClick(final DialogInterface dialog, final int which)
-			{
-				log.info("manually initiated blockchain reset");
-
-				application.resetBlockchain();
-				activity.finish(); // TODO doesn't fully finish prefs on single pane layouts
-			}
-		});
-		dialog.setNegativeButton(R.string.button_dismiss, null);
-		dialog.show();
-	}
-
-	private void handleExtendedPublicKey()
-	{
-		final DeterministicKey extendedKey = application.getWallet().getWatchingKey();
-		final String xpub = String.format(Locale.US, "%s?c=%d&h=bip32", extendedKey.serializePubB58(Constants.NETWORK_PARAMETERS),
-				extendedKey.getCreationTimeSeconds());
-		ExtendedPublicKeyFragment.show(getFragmentManager(), (CharSequence) xpub);
-	}
+    private void handleExtendedPublicKey()
+    {
+        final DeterministicKey extendedKey = application.getWallet().getWatchingKey();
+        final String xpub = String.format(Locale.US, "%s?c=%d&h=bip32", extendedKey.serializePubB58(Constants.NETWORK_PARAMETERS),
+                extendedKey.getCreationTimeSeconds());
+        ExtendedPublicKeyFragment.show(getParentFragmentManager(), (CharSequence) xpub);
+    }
 }

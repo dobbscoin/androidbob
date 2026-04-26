@@ -11,8 +11,8 @@ android {
         applicationId 'subgeneius.dobbs.wallet'
         minSdk 21
         targetSdk 36
-        versionCode 300
-        versionName '6.0.0'
+        versionCode 307
+        versionName '6.0.7'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -99,6 +99,8 @@ dependencies {
     implementation 'androidx.loader:loader:1.1.0'
     implementation 'androidx.viewpager:viewpager:1.0.0'
     implementation 'androidx.legacy:legacy-support-v13:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.preference:preference:1.2.1'
 
     // Dobbscoin/Bitcoin libraries - using JitPack for dobbscoinj
     // Note: dobbsdroidj-core doesn't exist on Maven Central, using lateminer/dobbscoinj from GitHub

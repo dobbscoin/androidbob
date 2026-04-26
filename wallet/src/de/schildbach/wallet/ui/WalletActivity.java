@@ -59,12 +59,17 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.text.format.DateUtils;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -128,6 +133,11 @@ public final class WalletActivity extends AbstractWalletActivity
 	private boolean seedRequestNeedsWalletPassword;
 	private String pendingCredentialAction; // "export_seed" or "import_seed"
 
+	private ImageView peekabob;
+	private static final int PEEK_DELAY_MS = 5000;
+	private static final int PEEK_VISIBLE_MS = 3500;
+	private static final String FAUCET_URL = "https://dobbscoin.info/faucet";
+
 	@Override
 	protected void onCreate(final Bundle savedInstanceState)
 	{
@@ -159,7 +169,95 @@ public final class WalletActivity extends AbstractWalletActivity
 
 		MaybeMaintenanceFragment.add(getFragmentManager());
 		application.writeDebugLog("A10:onCreate complete");
+
+		setupPeekabob();
 	}
+
+	private void setupPeekabob()
+	{
+		// Add peekabob inside the transactions panel — its bottom edge is the top
+		// of the action/disclaimer bar, so peekabob naturally appears to slide up
+		// out of that bar.
+		final FrameLayout panel = findViewById(R.id.wallet_transactions_panel);
+		if (panel == null)
+			return;
+		final float density = getResources().getDisplayMetrics().density;
+		// Native image is 160x199 — keep that aspect ratio at ~140dp wide.
+		final int wPx = (int) (140 * density);
+		final int hPx = (int) (140 * density * 199f / 160f);
+		final int marginRightPx = (int) (16 * density);
+		peekabob = new ImageView(this);
+		peekabob.setImageResource(R.drawable.peekabob);
+		peekabob.setScaleType(ImageView.ScaleType.FIT_END);
+		peekabob.setAdjustViewBounds(true);
+		peekabob.setContentDescription("Visit the Dobbscoin faucet");
+		final FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(wPx, hPx);
+		lp.gravity = Gravity.BOTTOM | Gravity.END;
+		lp.bottomMargin = 0;
+		lp.rightMargin = marginRightPx;
+		peekabob.setLayoutParams(lp);
+		// start hidden — translate fully below the panel's bottom edge
+		peekabob.setTranslationY(hPx + (int)(8 * density));
+		peekabob.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(final View v) {
+				try {
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(FAUCET_URL)));
+				} catch (final Exception ignored) {}
+			}
+		});
+		panel.addView(peekabob);
+	}
+
+	private void schedulePeekabob()
+	{
+		if (peekabob == null) return;
+		// reset to hidden (below the panel's bottom edge) before the next peek
+		final FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) peekabob.getLayoutParams();
+		final float density = getResources().getDisplayMetrics().density;
+		peekabob.animate().cancel();
+		peekabob.setTranslationY(lp.height + 8f * density);
+		handler.postDelayed(peekRunnable, PEEK_DELAY_MS);
+	}
+
+	private final Runnable peekRunnable = new Runnable() {
+		@Override
+		public void run() {
+			doPeekabob();
+		}
+	};
+
+	private void doPeekabob()
+	{
+		if (peekabob == null || isFinishing()) return;
+		peekabob.animate()
+				.translationY(0f)
+				.setDuration(800)
+				.setInterpolator(new DecelerateInterpolator())
+				.withEndAction(new Runnable() {
+					@Override
+					public void run() {
+						handler.postDelayed(hidePeekRunnable, PEEK_VISIBLE_MS);
+					}
+				})
+				.start();
+	}
+
+	private final Runnable hidePeekRunnable = new Runnable() {
+		@Override
+		public void run() {
+			if (peekabob == null) return;
+			final float density = getResources().getDisplayMetrics().density;
+			final float hideY = peekabob.getHeight() + 8f * density;
+			peekabob.animate()
+					.translationY(hideY)
+					.setDuration(700)
+					.setInterpolator(new AccelerateInterpolator())
+					.start();
+			// no reschedule — peekabob will re-trigger on the next onResume
+			// (i.e. when the user comes back to the wallet home from any sub-screen)
+		}
+	};
 
 	@Override
 	protected void onResume()
@@ -181,12 +279,16 @@ public final class WalletActivity extends AbstractWalletActivity
 
 		checkLowStorageAlert();
 		application.writeDebugLog("A14:onResume complete");
+
+		schedulePeekabob();
 	}
 
 	@Override
 	protected void onPause()
 	{
 		handler.removeCallbacksAndMessages(null);
+		if (peekabob != null)
+			peekabob.animate().cancel();
 
 		super.onPause();
 	}

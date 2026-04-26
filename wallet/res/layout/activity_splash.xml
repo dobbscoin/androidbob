@@ -4,17 +4,12 @@
     android:background="#000000"
     android:fitsSystemWindows="true">
 
-    <!-- Background image — offset down to leave room for tagline above -->
+    <!-- Full-screen splash background image -->
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="148dp"
-        android:layout_marginLeft="32dp"
-        android:layout_marginRight="32dp"
-        android:adjustViewBounds="true"
-        android:src="@drawable/splashimg"
-        android:scaleType="fitStart"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/splash_bg"
         android:contentDescription="@null" />
 
     <!-- Dark scrim so text pops over whatever is behind it -->
@@ -23,28 +18,51 @@
         android:layout_height="match_parent"
         android:background="#55000000" />
 
-    <!-- Tagline — two lines, auto-sized to fill the width -->
-    <TextView
+    <!-- Top block: brand mark + tagline -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="40dp"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"
-        android:gravity="center"
-        android:maxLines="2"
-        android:text="Where Culture\nBecomes Capital"
-        android:textColor="#FFD700"
-        android:textStyle="bold"
-        android:fontFamily="serif"
-        android:autoSizeTextType="uniform"
-        android:autoSizeMinTextSize="12sp"
-        android:autoSizeMaxTextSize="72sp"
-        android:letterSpacing="0.03"
-        android:shadowColor="#000000"
-        android:shadowDx="2"
-        android:shadowDy="2"
-        android:shadowRadius="8" />
+        android:layout_marginTop="32dp"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DOBBSCOIN"
+            android:textColor="#39FF14"
+            android:textStyle="bold"
+            android:fontFamily="@font/montserrat"
+            android:textSize="42sp"
+            android:letterSpacing="0.08"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="6" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
+            android:layout_marginTop="6dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:gravity="center"
+            android:maxLines="2"
+            android:text="Where SubCulture\nBecomes Capital"
+            android:textColor="#FFD700"
+            android:textStyle="italic"
+            android:fontFamily="@font/caladea"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="14sp"
+            android:autoSizeMaxTextSize="44sp"
+            android:letterSpacing="0.02"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="8" />
+
+    </LinearLayout>
 
     <!-- LOADING block — floats in the vertical center -->
     <LinearLayout
@@ -83,13 +101,13 @@
 
     </LinearLayout>
 
-    <!-- Bottom block — ordained button + tagline -->
+    <!-- Bottom block — ordained button + tagline + copyright -->
     <LinearLayout
         android:id="@+id/splash_bottom_block"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="36dp"
+        android:layout_marginBottom="56dp"
         android:orientation="vertical"
         android:gravity="center"
         android:paddingLeft="24dp"
@@ -123,6 +141,40 @@
             android:shadowDx="1"
             android:shadowDy="1"
             android:shadowRadius="4" />
+
+        <TextView
+            android:id="@+id/splash_copyright"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:paddingTop="6dp"
+            android:text="© SubGenius Finance"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:gravity="end"
+            android:clickable="true"
+            android:focusable="true"
+            android:shadowColor="#000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="3" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:paddingBottom="6dp"
+            android:text="© 1978-2026 The SubGenius Foundation"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:gravity="end"
+            android:shadowColor="#000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="3" />
 
     </LinearLayout>
 

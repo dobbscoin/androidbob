@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2026 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,39 +17,17 @@
 
 package de.schildbach.wallet.ui.preference;
 
-import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import de.schildbach.wallet.WalletApplication;
 import subgeneius.dobbs.wallet.R;
 
-public final class AboutFragment extends PreferenceFragmentCompat
+public final class HeadersFragment extends PreferenceFragmentCompat
 {
-    private Activity activity;
-    private WalletApplication application;
-
-    private static final String KEY_ABOUT_VERSION = "about_version";
-
-    @Override
-    public void onAttach(@NonNull final Context context)
-    {
-        super.onAttach(context);
-        this.activity = (Activity) context;
-        this.application = (WalletApplication) activity.getApplication();
-    }
-
     @Override
     public void onCreatePreferences(final Bundle savedInstanceState, final String rootKey)
     {
-        setPreferencesFromResource(R.xml.preference_about, rootKey);
-
-        final Preference versionPref = findPreference(KEY_ABOUT_VERSION);
-        if (versionPref != null)
-            versionPref.setSummary(application.packageInfo().versionName);
+        setPreferencesFromResource(R.xml.preference_headers, rootKey);
     }
 }

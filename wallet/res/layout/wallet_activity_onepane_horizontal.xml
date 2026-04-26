@@ -46,6 +46,7 @@
 				</FrameLayout>
 
 				<FrameLayout
+					android:id="@+id/wallet_transactions_panel"
 					android:layout_width="match_parent"
 					android:layout_height="0px"
 					android:layout_weight="1"

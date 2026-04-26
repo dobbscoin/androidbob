@@ -17,38 +17,87 @@
 
 package de.schildbach.wallet.ui.preference;
 
-import java.util.List;
-
+import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.OnApplyWindowInsetsListener;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+
 import subgeneius.dobbs.wallet.R;
 
-/**
- * @author Andreas Schildbach
- */
-public final class PreferenceActivity extends android.preference.PreferenceActivity
+public final class PreferenceActivity extends AppCompatActivity
+        implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback
 {
-	@Override
-	public void onBuildHeaders(final List<Header> target)
-	{
-		loadHeadersFromResource(R.xml.preference_headers, target);
-	}
+    @Override
+    protected void onCreate(final Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
 
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item)
-	{
-		int id = item.getItemId();
-		if (id == android.R.id.home) {
-			finish();
-			return true;
-		}
+        setContentView(R.layout.preference_activity);
 
-		return super.onOptionsItemSelected(item);
-	}
+        final Toolbar toolbar = findViewById(R.id.preference_toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null)
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-	@Override
-	protected boolean isValidFragment(final String fragmentName)
-	{
-		return SettingsFragment.class.getName().equals(fragmentName) || DiagnosticsFragment.class.getName().equals(fragmentName)
-				|| AboutFragment.class.getName().equals(fragmentName);
-	}
+        // SDK 35+ enforces edge-to-edge: system bars overlay the window. Push the
+        // toolbar/content down by the status-bar inset and clear the nav-bar inset
+        // at the bottom so the entire screen is reachable.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.preference_root),
+                new OnApplyWindowInsetsListener() {
+                    @Override
+                    public WindowInsetsCompat onApplyWindowInsets(final View v,
+                            final WindowInsetsCompat insets) {
+                        final Insets bars = insets.getInsets(
+                                WindowInsetsCompat.Type.systemBars()
+                                        | WindowInsetsCompat.Type.displayCutout());
+                        v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                        return WindowInsetsCompat.CONSUMED;
+                    }
+                });
+
+        if (savedInstanceState == null)
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.preference_content, new HeadersFragment())
+                    .commit();
+    }
+
+    @Override
+    public boolean onPreferenceStartFragment(final PreferenceFragmentCompat caller, final Preference pref)
+    {
+        final Fragment fragment = getSupportFragmentManager().getFragmentFactory().instantiate(
+                getClassLoader(), pref.getFragment());
+        fragment.setArguments(pref.getExtras());
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.preference_content, fragment)
+                .addToBackStack(null)
+                .commit();
+        if (getSupportActionBar() != null && pref.getTitle() != null)
+            getSupportActionBar().setTitle(pref.getTitle());
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item)
+    {
+        if (item.getItemId() == android.R.id.home) {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
+                if (getSupportActionBar() != null)
+                    getSupportActionBar().setTitle(R.string.preferences_activity_title);
+            } else {
+                finish();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

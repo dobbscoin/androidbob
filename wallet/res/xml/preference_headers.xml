@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<preference-headers xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<header
-		android:fragment="de.schildbach.wallet.ui.preference.SettingsFragment"
-		android:title="@string/preferences_activity_title" />
-	<header
-		android:fragment="de.schildbach.wallet.ui.preference.DiagnosticsFragment"
-		android:title="@string/preferences_category_diagnostics" />
-	<header
-		android:fragment="de.schildbach.wallet.ui.preference.AboutFragment"
-		android:title="@string/about_title" />
+    <Preference
+        android:key="header_settings"
+        android:title="@string/preferences_activity_title"
+        app:fragment="de.schildbach.wallet.ui.preference.SettingsFragment" />
 
-</preference-headers>
+    <Preference
+        android:key="header_diagnostics"
+        android:title="@string/preferences_category_diagnostics"
+        app:fragment="de.schildbach.wallet.ui.preference.DiagnosticsFragment" />
+
+    <Preference
+        android:key="header_about"
+        android:title="@string/about_title"
+        app:fragment="de.schildbach.wallet.ui.preference.AboutFragment" />
+
+</PreferenceScreen>

@@ -1,5 +1,7 @@
 # Claude Code — Dobbscoin Android Wallet Upgrade
 
+@~/claude/dobbscoin-facts.md
+
 ## Project
 Android wallet app for Dobbscoin (BOB) cryptocurrency. Goal: make it build and
 install cleanly on Android 16 (API 36) without altering any consensus-critical code.

@@ -130,8 +130,8 @@ public final class Constants
 
 	public static final BaseEncoding HEX = BaseEncoding.base16().lowerCase();
 
-	public static final String SOURCE_URL = "https://github.com/dobbscoin/androidbob";
-	public static final String BINARY_URL = "https://github.com/dobbscoin/androidbob/releases";
+	public static final String SOURCE_URL = "https://github.com/SubGeniusFinance/androidbob";
+	public static final String BINARY_URL = "https://github.com/SubGeniusFinance/androidbob/releases";
 	public static final String MARKET_APP_URL = "";
 	public static final String WEBMARKET_APP_URL = "";
 

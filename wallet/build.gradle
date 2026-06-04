@@ -11,8 +11,8 @@ android {
         applicationId 'subgeneius.dobbs.wallet'
         minSdk 21
         targetSdk 36
-        versionCode 307
-        versionName '6.0.7'
+        versionCode 309
+        versionName '6.0.9'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
